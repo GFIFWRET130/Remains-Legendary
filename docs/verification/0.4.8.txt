@@ -1,0 +1,12 @@
+Remains Legendary 0.4.8
+SHA256 A3377EDB453D7B2B40229CE8C3E0C3BA59D44E67D60949610758B24BB1132F47
+Deployed build matches tested build.
+Full hidden integration PASS: 4026 factory/profile/reentry assertions, old features retained.
+Additional boss phase and reentry run PASS.
+Skill regression PASS 482.
+All 5046 original non-code SWF tags preserved.
+Native Game and Land unchanged after stripping four entry hooks; Unit unchanged from 0.4.7 after stripping spawn hook.
+Global difficulty, quest marker, cached Land and dead enemy state preserved across actual V-to-I reentry.
+Five native Game.save/init + AMF choice roundtrips PASS.
+Mouse reachability + synthetic input tested; no physical desktop clicks.
+Test audio sliders: 5%. No full campaign/boss playthrough; numbers preliminary; reward changes are XP only.

@@ -1,0 +1,9 @@
+Remains Legendary 0.4.7
+SHA256: 816109FDB9C424193EB1D5346E4B551BB2904F61D4AB1A3AE4AE8294ED27524A
+Deployed SWF matches tested build.
+482 skill assertions PASS.
+Skip tutorial, inventory save/reload, actual shots, projectile effects, lightning I/II and wall cover PASS.
+Wheel and dialogue automated regression checks PASS; physical desktop clicks not exercised.
+All 5046 original non-code SWF tags preserved; WThrow, SATS and controls unchanged.
+Hidden integration audio sliders: 5%.
+Campaign completion and final combat balance not tested.

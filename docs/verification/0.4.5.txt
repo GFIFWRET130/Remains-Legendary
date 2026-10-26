@@ -1,0 +1,89 @@
+Remains Legendary 0.4.5
+SHA256 0525FF4B8AFFF8A8945BD04DC48D4D71760764BF982545AB6FCB52080B5E043A
+PASS original 0.4.4 reproduces inaccessible mouse descendants; fixed HUD mouse-mode activation/restoration passes ancestor flags and stage point-hit checks.
+PASS original 0.4.4 reproduces first dialogue line absent; fixed explicit ID matching passes 2-line script, progression, finish, language fallback and original begDialWater text/portrait.
+PASS wheel closes for dialogue, and remains clickable after closing background text.
+PASS menu version, language/size refresh, native window title; same application id retained.
+PASS skip tutorial, 27 weapons and 5 outfits, 21 shots and ammo checks, save-object roundtrip and migration, .50 MG Vigilance, changelog.
+PASS 5% sound/music/steps in hidden test.
+PASS 5046 original non-code SWF tags unchanged.
+Limits: offscreen runtime and synthetic input/hit testing, not a physical-mouse desktop playthrough or full campaign.
+
+MENU_VERSION PASS localized menu label, refresh/resize, native title 0.4.5
+PACK_LOAD_TEST starting propusk=true
+385 Интерфейс
+778 Game init
+729 Персонаж
+0 Местность
+729 Создание местности
+243 Вход в местность
+PACK_LOAD_TEST skip tutorial loaded
+TEST_AUDIO_5 PASS sound=0.05 music=0.05 steps=0.05
+PACK_LOAD_TEST inventory 27 weapons + 5 armors OK
+PACK_LOAD_TEST equipped cat_armor
+PACK_LOAD_TEST equipped maid_outfit
+PACK_LOAD_TEST equipped stable99
+PACK_LOAD_TEST equipped raider_scrap
+PACK_LOAD_TEST equipped aurora_armor
+PACK_LOAD_TEST equipped weapon/icon death_of_insects
+PACK_LOAD_TEST equipped weapon/icon bread
+PACK_LOAD_TEST equipped weapon/icon valera
+PACK_LOAD_TEST equipped weapon/icon golden_sun
+PACK_LOAD_TEST equipped weapon/icon excalibur
+ARSENAL_SHOT PASS vigilance ammo=p50mg hold=11 projectile=0
+PACK_LOAD_TEST equipped weapon/icon vigilance
+PACK_LOAD_TEST equipped weapon/icon police_baton
+ARSENAL_SHOT PASS last_word ammo=p127 hold=9 projectile=0
+PACK_LOAD_TEST equipped weapon/icon last_word
+ARSENAL_SHOT PASS cricket ammo=p9 hold=29 projectile=0
+PACK_LOAD_TEST equipped weapon/icon cricket
+ARSENAL_SHOT PASS iron_argument ammo=p44 hold=5 projectile=0
+PACK_LOAD_TEST equipped weapon/icon iron_argument
+ARSENAL_SHOT PASS two_boots ammo=p20 hold=1 projectile=0
+PACK_LOAD_TEST equipped weapon/icon two_boots
+ARSENAL_SHOT PASS janitor ammo=p20 hold=4 projectile=0
+PACK_LOAD_TEST equipped weapon/icon janitor
+ARSENAL_SHOT PASS quiet_hour ammo=p308 hold=6 projectile=0
+PACK_LOAD_TEST equipped weapon/icon quiet_hour
+ARSENAL_SHOT PASS rail_rifle ammo=p50mg hold=3 projectile=0
+PACK_LOAD_TEST equipped weapon/icon rail_rifle
+ARSENAL_SHOT PASS bad_weather ammo=p556 hold=31 projectile=0
+PACK_LOAD_TEST equipped weapon/icon bad_weather
+ARSENAL_SHOT PASS northern_lights ammo=batt hold=85 projectile=5
+PACK_LOAD_TEST equipped weapon/icon northern_lights
+ARSENAL_SHOT PASS reverse_rainbow ammo=energ hold=108 projectile=5
+PACK_LOAD_TEST equipped weapon/icon reverse_rainbow
+ARSENAL_SHOT PASS storm_jar ammo=crystal hold=88 projectile=9
+PACK_LOAD_TEST equipped weapon/icon storm_jar
+ARSENAL_SHOT PASS cold_welcome ammo=pcryo hold=15 projectile=11
+PACK_LOAD_TEST equipped weapon/icon cold_welcome
+ARSENAL_SHOT PASS ash_star ammo=energ hold=225 projectile=6
+PACK_LOAD_TEST equipped weapon/icon ash_star
+ARSENAL_SHOT PASS lunar_debt ammo=energ hold=110 projectile=5
+PACK_LOAD_TEST equipped weapon/icon lunar_debt
+ARSENAL_SHOT PASS hello_ceiling ammo=rocket hold=0 projectile=4
+PACK_LOAD_TEST equipped weapon/icon hello_ceiling
+ARSENAL_SHOT PASS postman ammo=gren40 hold=5 projectile=4
+PACK_LOAD_TEST equipped weapon/icon postman
+ARSENAL_SHOT PASS good_morning ammo=energ hold=220 projectile=8
+PACK_LOAD_TEST equipped weapon/icon good_morning
+ARSENAL_SHOT PASS sewing_machine ammo=p5 hold=599 projectile=0
+PACK_LOAD_TEST equipped weapon/icon sewing_machine
+ARSENAL_SHOT PASS warm_embrace ammo=fuel hold=597 projectile=3
+PACK_LOAD_TEST equipped weapon/icon warm_embrace
+ARSENAL_SHOT PASS surprise ammo=crystal hold=90 projectile=6
+PACK_LOAD_TEST equipped weapon/icon surprise
+VIGILANCE_50MG PASS actual shot and old-save migration; old rounds refunded; no free .50 ammo
+ARSENAL_SAVE PASS all 20 states and ammo stock unchanged after serialization/reload
+ARSENAL_MIGRATION PASS all 20 added to pre-arsenal save
+CHANGELOG PASS setting, click, contents, normal game log preserved
+WHEEL PASS category/item mouse input, pages, Esc/back/cancel, no attack input leak, unchanged quick slots/time, original selector fallback, ammo selector, settings toggle
+DIALOG PASS ID lookup, script start, next line, finish/control restore, English fallback, missing ID; wheel closes for dialog and stays clickable afterwards
+PACK_LOAD_TEST PASS: skip tutorial; 32 items; armor equipment; rank 11/removal; no Aurora flight; weapon icons
+VIGILANCE_50MG PASS actual shot and old-save migration; old rounds refunded; no free .50 ammo
+ARSENAL_SAVE PASS all 20 states and ammo stock unchanged after serialization/reload
+ARSENAL_MIGRATION PASS all 20 added to pre-arsenal save
+CHANGELOG PASS setting, click, contents, normal game log preserved
+WHEEL PASS category/item mouse input, pages, Esc/back/cancel, no attack input leak, unchanged quick slots/time, original selector fallback, ammo selector, settings toggle
+DIALOG PASS ID lookup, script start, next line, finish/control restore, English fallback, missing ID; wheel closes for dialog and stays clickable afterwards
+PACK_LOAD_TEST PASS: skip tutorial; 32 items; armor equipment; rank 11/removal; no Aurora flight; weapon icons
