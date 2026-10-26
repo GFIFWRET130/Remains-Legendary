@@ -1,0 +1,33 @@
+MENU_VERSION PASS localized menu label, refresh/resize, native title 0.4.8
+PACK_LOAD_TEST starting propusk=true
+370 Интерфейс
+769 Game init
+717 Персонаж
+0 Местность
+701 Создание местности
+256 Вход в местность
+PACK_LOAD_TEST skip tutorial loaded
+FLASH_COUNT initial 6
+TEST_AUDIO_5 PASS sound=0.05 music=0.05 steps=0.05
+PACK_LOAD_TEST inventory 29 weapons + 5 armors OK
+FACTORY PASS settings click, five native Game.save/init + AMF roundtrips, unchanged global difficulty, old-save default, exact elite rate boundaries
+FACTORY CHOOSER PASS native map beginMission + gotoLand interception, all five reachable mouse choices, preview, cancel/Esc, pause restored, no mission mutation before confirmation
+FACTORY MODE PASS 0 Простая enemies=110 additionalElite=0 XPpool=27620; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions
+FACTORY MODE PASS 1 Средняя enemies=113 additionalElite=0 XPpool=30960; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions
+FACTORY MODE PASS 2 Сложная enemies=115 additionalElite=2 XPpool=35125; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions
+FACTORY MODE PASS 3 Экстрим enemies=123 additionalElite=5 XPpool=48780; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions
+FACTORY BOSS PASS bossraider native construction, placement, HP scaling, no extra elite conversion, visual exists
+FACTORY BOSS PASS ultra native construction, placement, HP scaling, no extra elite conversion, visual exists
+FACTORY BOSS PHASE PASS bossraider changed attack/movement and replacement weapon retained through V-I-V, no elite conversion
+FACTORY BOSS PHASE PASS ultra changed attack/movement and replacement weapon retained through V-I-V, no elite conversion
+FACTORY MODE PASS 4 А ты выживешь? enemies=104 additionalElite=12 XPpool=68640; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions
+965 Создание местности
+false
+190 Вход в местность
+0 Создание местности
+318 Вход в местность
+0 Создание местности
+false
+218 Вход в местность
+FACTORY REENTRY PASS actual map-confirm travel V, return to base, second chooser + travel I, same cached Land, no dead enemy revival, original HP baseline restored, progress/global difficulty preserved; assertions=3932
+FACTORY_LOAD_TEST PASS chooser every entry, five profiles, native travel and reentry, no progress reset + base regressions

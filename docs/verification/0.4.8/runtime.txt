@@ -1,0 +1,102 @@
+MENU_VERSION PASS localized menu label, refresh/resize, native title 0.4.8
+PACK_LOAD_TEST starting propusk=true
+398 Интерфейс
+762 Game init
+718 Персонаж
+1 Местность
+680 Создание местности
+216 Вход в местность
+PACK_LOAD_TEST skip tutorial loaded
+FLASH_COUNT initial 6
+TEST_AUDIO_5 PASS sound=0.05 music=0.05 steps=0.05
+PACK_LOAD_TEST inventory 29 weapons + 5 armors OK
+PACK_LOAD_TEST equipped cat_armor
+PACK_LOAD_TEST equipped maid_outfit
+PACK_LOAD_TEST equipped stable99
+PACK_LOAD_TEST equipped raider_scrap
+PACK_LOAD_TEST equipped aurora_armor
+PACK_LOAD_TEST equipped weapon/icon death_of_insects flashStock=6
+PACK_LOAD_TEST equipped weapon/icon bread flashStock=6
+PACK_LOAD_TEST equipped weapon/icon valera flashStock=6
+PACK_LOAD_TEST equipped weapon/icon golden_sun flashStock=6
+PACK_LOAD_TEST equipped weapon/icon excalibur flashStock=6
+ARSENAL_SHOT PASS vigilance ammo=p50mg hold=11 projectile=0
+PACK_LOAD_TEST equipped weapon/icon vigilance flashStock=6
+PACK_LOAD_TEST equipped weapon/icon flashbang flashStock=6
+PACK_LOAD_TEST equipped weapon/icon police_baton flashStock=6
+ARSENAL_SHOT PASS last_word ammo=p127 hold=9 projectile=0
+PACK_LOAD_TEST equipped weapon/icon last_word flashStock=6
+ARSENAL_SHOT PASS cricket ammo=p9 hold=29 projectile=0
+PACK_LOAD_TEST equipped weapon/icon cricket flashStock=6
+ARSENAL_SHOT PASS iron_argument ammo=p44 hold=5 projectile=0
+PACK_LOAD_TEST equipped weapon/icon iron_argument flashStock=6
+ARSENAL_SHOT PASS two_boots ammo=p20 hold=1 projectile=0
+PACK_LOAD_TEST equipped weapon/icon two_boots flashStock=6
+ARSENAL_SHOT PASS janitor ammo=p20 hold=4 projectile=0
+PACK_LOAD_TEST equipped weapon/icon janitor flashStock=6
+ARSENAL_SHOT PASS quiet_hour ammo=p308 hold=6 projectile=0
+PACK_LOAD_TEST equipped weapon/icon quiet_hour flashStock=6
+ARSENAL_SHOT PASS rail_rifle ammo=p50mg hold=3 projectile=0
+PACK_LOAD_TEST equipped weapon/icon rail_rifle flashStock=6
+ARSENAL_SHOT PASS bad_weather ammo=p556 hold=31 projectile=0
+PACK_LOAD_TEST equipped weapon/icon bad_weather flashStock=6
+ARSENAL_SHOT PASS northern_lights ammo=batt hold=85 projectile=5
+PACK_LOAD_TEST equipped weapon/icon northern_lights flashStock=6
+ARSENAL_SHOT PASS reverse_rainbow ammo=energ hold=108 projectile=5
+PACK_LOAD_TEST equipped weapon/icon reverse_rainbow flashStock=6
+ARSENAL_SHOT PASS storm_jar ammo=crystal hold=88 projectile=9
+PACK_LOAD_TEST equipped weapon/icon storm_jar flashStock=6
+ARSENAL_SHOT PASS cold_welcome ammo=pcryo hold=15 projectile=11
+PACK_LOAD_TEST equipped weapon/icon cold_welcome flashStock=6
+ARSENAL_SHOT PASS ash_star ammo=energ hold=225 projectile=6
+PACK_LOAD_TEST equipped weapon/icon ash_star flashStock=6
+ARSENAL_SHOT PASS lunar_debt ammo=energ hold=110 projectile=5
+PACK_LOAD_TEST equipped weapon/icon lunar_debt flashStock=6
+ARSENAL_SHOT PASS hello_ceiling ammo=rocket hold=0 projectile=4
+PACK_LOAD_TEST equipped weapon/icon hello_ceiling flashStock=6
+ARSENAL_SHOT PASS postman ammo=gren40 hold=5 projectile=4
+PACK_LOAD_TEST equipped weapon/icon postman flashStock=6
+ARSENAL_SHOT PASS good_morning ammo=energ hold=220 projectile=2
+PACK_LOAD_TEST equipped weapon/icon good_morning flashStock=6
+ARSENAL_SHOT PASS sewing_machine ammo=p5 hold=599 projectile=0
+PACK_LOAD_TEST equipped weapon/icon sewing_machine flashStock=6
+ARSENAL_SHOT PASS warm_embrace ammo=fuel hold=597 projectile=3
+PACK_LOAD_TEST equipped weapon/icon warm_embrace flashStock=6
+ARSENAL_SHOT PASS surprise ammo=crystal hold=90 projectile=6
+PACK_LOAD_TEST equipped weapon/icon surprise flashStock=6
+PACK_LOAD_TEST equipped weapon/icon multi_lightning flashStock=6
+VIGILANCE_50MG PASS actual shot and old-save migration; old rounds refunded; no free .50 ammo
+ARSENAL_SAVE PASS all 20 states and ammo stock unchanged after serialization/reload
+ARSENAL_MIGRATION PASS all 20 added to pre-arsenal save
+CHANGELOG PASS setting, click, contents, normal game log preserved
+WHEEL PASS category/item mouse input, pages, Esc/back/cancel, no attack input leak, unchanged quick slots/time, original selector fallback, ammo selector, settings toggle
+DIALOG PASS ID lookup, script start, next line, finish/control restore, English fallback, missing ID; wheel closes for dialog and stays clickable afterwards
+FLASHBANG PASS native throw, one count consumed, fuse, single detonation, nearby enemy accuracy reduced, 5s/2s, no HP damage, robot immunity, range
+FLASHBANG PASS effect expiry/restored accuracy, native wall cover, player risk without HP loss, saved count/no refill, old-save grant
+FLASHBANG PASS other explosives keep native explosion path
+PROJECTILE PASS native collision, chill 10/20/30 cap and expiry
+PROJECTILE PASS lunar mark consume/expiry, burning actual damage/no stacking, sonic physical damage and 2s contusion
+PROJECTILE PASS six distinct rainbow paths converge at aim point
+PROJECTILE PASS storm ball config, eight nonrecursive short-lived shards, eight distinct visual classes/gallery
+MULTILIGHTNING PASS wall prevents target acquisition and damage; native untargeted shot remains
+MULTILIGHTNING PASS native WMagic levels I/II, 3/5 distinct enemy targets, real collisions, friendly exclusion, mana exactly once
+PACK_LOAD_TEST PASS baseline 0.4.7 features
+FACTORY PASS settings click, five native Game.save/init + AMF roundtrips, unchanged global difficulty, old-save default, exact elite rate boundaries
+FACTORY CHOOSER PASS native map beginMission + gotoLand interception, all five reachable mouse choices, preview, cancel/Esc, pause restored, no mission mutation before confirmation
+FACTORY MODE PASS 0 Простая enemies=121 additionalElite=0 XPpool=28780; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions
+FACTORY MODE PASS 1 Средняя enemies=115 additionalElite=0 XPpool=24620; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions
+FACTORY MODE PASS 2 Сложная enemies=111 additionalElite=2 XPpool=36000; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions
+FACTORY MODE PASS 3 Экстрим enemies=114 additionalElite=6 XPpool=57900; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions
+FACTORY BOSS PASS bossraider native construction, placement, HP scaling, no extra elite conversion, visual exists
+FACTORY BOSS PASS ultra native construction, placement, HP scaling, no extra elite conversion, visual exists
+FACTORY MODE PASS 4 А ты выживешь? enemies=120 additionalElite=13 XPpool=74520; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions
+1104 Создание местности
+false
+278 Вход в местность
+0 Создание местности
+244 Вход в местность
+0 Создание местности
+false
+229 Вход в местность
+FACTORY REENTRY PASS actual map-confirm travel V, return to base, second chooser + travel I, same cached Land, no dead enemy revival, original HP baseline restored, progress/global difficulty preserved; assertions=4026
+FACTORY_LOAD_TEST PASS chooser every entry, five profiles, native travel and reentry, no progress reset + base regressions

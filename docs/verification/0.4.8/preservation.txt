@@ -1,0 +1,23 @@
+Remains Legendary v0.4.8 — static preservation checks; runtime verified separately
+PASS All 5046 non-code SWF tags identical: graphics, animation timelines, sounds, symbols
+PASS Original weapon method preserved: Weapon
+PASS Original weapon method preserved: create
+PASS Original weapon method preserved: getVisParam
+PASS Original weapon method preserved: setNull
+PASS Original weapon method preserved: animate
+PASS Original weapon method preserved: getBulXY
+PASS Original weapon method preserved: resultDamage
+PASS Entire UnitBossUltra class identical to original
+PASS Weapon registration called before inventory construction
+PASS Automatic inventory grant hooked after normal inventory loading
+PASS No duplicate pistol on save reload
+PASS Hard requirement: energy weapons rank 5
+PASS Use blocked independently of original difficulty options
+PASS Double damage checks actual struck insect
+PASS Insect bonus connected to actual damage pipeline
+PASS Separate pistol visual class used for world and inventory
+PASS entire native Bullet unchanged after stripping two custom hooks
+PASS native WThrow, SATS and controls unchanged
+PASS native Unit identical to 0.4.7 after stripping factory spawn hook
+PASS native Game identical after stripping pre-entry guards: save/load, quests, travel and mission creation preserved
+PASS native Land identical after stripping factory initialization + notification hooks
