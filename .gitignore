@@ -1,0 +1,13 @@
+.build/
+dist/
+local/
+*.swf
+*.exe
+*.dll
+*.sav
+*.sol
+*.bak
+*.zip
+*.log
+.env*
+logs/
