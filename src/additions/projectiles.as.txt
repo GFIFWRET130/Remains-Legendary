@@ -1,0 +1,124 @@
+      // Weak keys prevent transient projectiles and enemies from retaining a level in memory.
+      private static var projectileState:Dictionary=new Dictionary(true);
+      private static var projectileHits:Dictionary=new Dictionary(true);
+      public static var rainbowColor:int=0;
+      public static var projectileIds:Array=["northern_lights","lunar_debt","reverse_rainbow","storm_jar","surprise","good_morning","ash_star","hello_ceiling","multi_lightning"];
+      public static function projectileClass(id:String):Class {
+         if(id=="northern_lights")return AuroraShot;
+         if(id=="lunar_debt")return LunarShot;
+         if(id=="reverse_rainbow")return RainbowShot;
+         if(id=="storm_jar")return StormShot;
+         if(id=="surprise")return SurpriseShot;
+         if(id=="good_morning")return SonicShot;
+         if(id=="ash_star")return AshShot;
+         if(id=="hello_ceiling")return CeilingRocket;
+         return null;
+      }
+      public static function projectileData():void {
+         for(var stack:int=1;stack<=3;stack++)if(legendaryFind(AllData.d.eff,"legendary_chill"+stack)==null){
+            var chill:XML=<eff tip="2" t="4"><sk id="tormoz" ref="mult"/></eff>;
+            chill.@id="legendary_chill"+stack;chill.sk[0].@v1=1-stack*.1;AllData.d.appendChild(chill);
+            packText("e","legendary_chill"+stack,"Охлаждение: "+stack*10+"%","Скорость передвижения снижена на 4 секунды.");
+         }
+         if(legendaryFind(AllData.d.eff,"legendary_lunar")==null)AllData.d.appendChild(<eff id="legendary_lunar" tip="2" t="6"/>);
+         packText("e","legendary_lunar","Лунный долг","Следующее попадание «Лунного долга» в течение 6 секунд нанесёт на 35% больше урона и снимет метку.");
+         if(legendaryFind(AllData.d.weapon,"multi_lightning")==null){
+            var spell:XML=legendaryFind(AllData.d.weapon,"lightning").copy();spell.@id="multi_lightning";spell.@perslvl=1;spell.vis[0].@vweap="vislightning";
+            spell.char[0].@damage=50;spell.char[1].@damage=70;spell.ammo[0].@magic=400;spell.ammo[0].@mana=45;spell.ammo[1].@mana=75;
+            spell.com[0].@chance=0;spell.com[1].@chance=0;AllData.d.appendChild(spell);
+         }
+         packText("weapon","multi_lightning","Мультимолния","Уровень I: до 3 разных врагов, 50 базового урона каждому. Уровень II: до 5 врагов, 70 урона. Радиус поиска от точки прицеливания — 280; дальность — 800. Стены закрывают цели. Один расход маны за применение. Для проверки выдан уровень I.");
+      }
+      public static function projectileEffect(target:Object,id:String):Object {
+         for each(var effect:Object in target.effects)if(!effect.vse&&effect.id==id)return effect;
+         return null;
+      }
+      private static function projectileExpire(target:Object,id:String):void {
+         for each(var effect:Object in target.effects)if(!effect.vse&&effect.id==id)effect.unsetEff(false,false,false);
+         // Native addEffect merges by ID even with expired entries; remove those before replacing.
+         for(var i:int=target.effects.length-1;i>=0;i--)if(target.effects[i].vse&&target.effects[i].id==id)target.effects.splice(i,1);
+      }
+      public static function projectileDamage(target:Object,damage:Number,bullet:Object):Number {
+         if(damage<=0||bullet==null||bullet.weap==null||target.invulner||target.sost>=3)return damage;
+         if(target.vulner!=null&&bullet.tipDamage>=0&&bullet.tipDamage<20&&target.vulner[bullet.tipDamage]<=0)return damage;
+         var id:String=bullet.weap.id;if(projectileIds.indexOf(id)<0)return damage;
+         var hits:Dictionary=projectileHits[bullet];if(hits==null){hits=new Dictionary(true);projectileHits[bullet]=hits;}
+         if(hits[target])return damage;hits[target]=true;
+         if(id=="lunar_debt"){
+            if(projectileEffect(target,"legendary_lunar")!=null){projectileExpire(target,"legendary_lunar");return damage*1.35;}
+            projectileExpire(target,"legendary_lunar");target.addEffect("legendary_lunar",0,6,false);
+         }
+         if(id=="northern_lights"&&!target.mech&&(target.vulner==null||target.vulner[11]>.1)){
+            var stacks:int=1;
+            for(var n:int=1;n<=3;n++)if(projectileEffect(target,"legendary_chill"+n)!=null)stacks=Math.min(3,n+1);
+            for(n=1;n<=3;n++)projectileExpire(target,"legendary_chill"+n);
+            target.addEffect("legendary_chill"+stacks,0,4,false);
+         }
+         if(id=="ash_star"&&(target.vulner==null||target.vulner[3]>.1)){
+            var burning:Object=projectileEffect(target,"burning");
+            if(burning!=null)burning.t=Math.max(burning.t,4*World.fps);
+            else {projectileExpire(target,"burning");target.addEffect("burning",8,4,false);}
+         }
+         if(id=="good_morning"&&!target.mech&&!target.doop)flashbangEffect(target,"contusion",2);
+         return damage;
+      }
+      public static function projectileAim(b:Object,x:Number,y:Number):void {
+         b.rot=Math.atan2(y-b.Y,x-b.X);b.dx=Math.cos(b.rot)*b.vel;b.dy=Math.sin(b.rot)*b.vel;b.knockx=Math.cos(b.rot);b.knocky=Math.sin(b.rot);
+      }
+      public static function projectileFired(weapon:Object):void {
+         if(weapon.b==null)return;
+         if(weapon.id=="multi_lightning"){multiLightning(weapon);return;}
+         if(weapon.id!="reverse_rainbow")return;
+         var count:int=0;var obj:Object=weapon.loc.lastObj;var aimX:Number=weapon.owner.celX;var aimY:Number=weapon.owner.celY;
+         var angle:Number=Math.atan2(aimY-weapon.bulY,aimX-weapon.bulX);
+         while(obj!=null&&count<weapon.kol){
+            if(obj is Bullet&&obj.weap==weapon&&projectileState[obj]==null){
+               var offset:Number=(count-(weapon.kol-1)*.5)*4;
+               obj.X=obj.begx=weapon.bulX-Math.sin(angle)*offset;obj.Y=obj.begy=weapon.bulY+Math.cos(angle)*offset;
+               projectileAim(obj,aimX,aimY);projectileState[obj]={age:0};count++;
+            }
+            obj=obj.pobj;
+         }
+      }
+      public static function multiLightning(weapon:Object):void {
+         var main:Object=weapon.b;var owner:Object=weapon.owner;var candidates:Array=[];var seen:Dictionary=new Dictionary(true);
+         for each(var target:Object in owner.loc.units){
+            if(seen[target])continue;seen[target]=true;
+            if(target==owner||target.fraction==owner.fraction||target.fraction==0||target.sost>=3||target.invulner||!owner.isMeet(target))continue;
+            var x:Number=target.X;var y:Number=target.Y-target.scY*.5;var dx:Number=x-main.X;var dy:Number=y-main.Y;
+            var ax:Number=x-owner.celX;var ay:Number=y-owner.celY;
+            if(dx*dx+dy*dy>800*800||ax*ax+ay*ay>280*280||!owner.loc.isLine(main.X,main.Y,x,y))continue;
+            candidates.push({unit:target,dist:ax*ax+ay*ay});
+         }
+         candidates.sortOn("dist",Array.NUMERIC);
+         var limit:int=weapon.variant>0?5:3;
+         for(var i:int=0;i<Math.min(limit,candidates.length);i++){
+            target=candidates[i].unit;
+            var b:Object=i==0?main:new Bullet(owner,main.X,main.Y,weapon.vBullet);
+            if(i>0){
+               b.weap=weapon;
+               for each(var key:String in ["vel","damage","pier","armorMult","tipDamage","tipDecal","precision","antiprec","miss","critCh","critInvis","critDamMult","critM","destroy","otbros","flare","spring","probiv","liv","desintegr"])b[key]=main[key];
+            }
+            b.targetObj=target;projectileAim(b,target.X,target.Y-target.scY*.5);
+         }
+      }
+      public static function projectileStep(b:Object):void {
+         if(b==null||b.weap==null||projectileIds.indexOf(b.weap.id)<0)return;
+         var state:Object=projectileState[b];
+         if(state==null){state={age:0};projectileState[b]=state;}
+         state.age++;
+         if(b.vis!=null){
+            if((b.weap.id=="storm_jar"||b.weap.id=="surprise")&&b.vis.core!=null)b.vis.core.rotation=state.age*12;
+            if(b.weap.id=="hello_ceiling")b.vis.alpha=.92+.08*(state.age%2);
+         }
+      }
+      public static function projectileBurst(b:Object):void {
+         if(b==null||b.weap==null||b.weap.id!="surprise"||b.inWall)return;
+         var state:Object=projectileState[b];if(state==null){state={age:0};projectileState[b]=state;}
+         if(state.burst)return;state.burst=true;
+         for(var i:int=0;i<8;i++){
+            var shard:Bullet=new Bullet(b.owner,b.X,b.Y,AshShot);shard.weap=b.weap;
+            shard.damage=b.damageExpl*.12;shard.tipDamage=6;shard.tipDecal=15;shard.vel=18;shard.liv=10;shard.destroy=0;
+            shard.rot=i*Math.PI/4;shard.dx=Math.cos(shard.rot)*18;shard.dy=Math.sin(shard.rot)*18;shard.knockx=Math.cos(shard.rot);shard.knocky=Math.sin(shard.rot);
+         }
+      }

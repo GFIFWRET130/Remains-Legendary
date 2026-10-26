@@ -1,0 +1,105 @@
+      private static var factoryLands:Dictionary=new Dictionary(true);
+      private static var factoryUnits:Dictionary=new Dictionary(true);
+      public static var factoryNames:Array=["Простая","Средняя","Сложная","Экстрим","А ты выживешь?"];
+      public static function factoryProfile(mode:int):Object {
+         mode=Math.max(0,Math.min(4,mode));
+         return {mode:mode,name:factoryNames[mode],hp:[.75,1,1.5,2,3][mode],damage:[.75,1,1.25,1.5,2][mode],xp:[1,1,1.25,1.5,2][mode],elite:[0,0,.08,.16,.25][mode]};
+      }
+      public static function factorySelected():int {
+         if(World.w==null||World.w.game==null||World.w.game.triggers==null)return 1;
+         var saved:int=int(World.w.game.triggers["legendary_factory_mode"]);
+         return saved>=1&&saved<=5?saved-1:1;
+      }
+      public static function factoryChoose(mode:int):Boolean {
+         if(mode<0||mode>4||World.w==null||World.w.game==null)return false;
+         if(World.w.land!=null&&World.w.land.act!=null&&World.w.land.act.id=="random_plant")return false;
+         World.w.game.triggers["legendary_factory_mode"]=mode+1;
+         return true;
+      }
+      public static function factoryDescription():String {
+         var p:Object=factoryProfile(factorySelected());
+         var active:int=World.w==null?-1:factoryActive(World.w.land);
+         return (active<0?"":"<b>Текущий поход: "+factoryNames[active]+"</b><br>")+"Перед каждым входом на Завод открывается выбор всех пяти сложностей. Последний выбор запоминается, но не блокирует остальные варианты.<br><br>Средняя соответствует прежнему балансу. Остальные локации и глобальная сложность не меняются. При повторном входе здоровье живых врагов пересчитывается с сохранением доли оставшегося HP, погибшие не оживают. Квесты и предметы не сбрасываются сменой режима. Бонус награды пока касается опыта, содержимое контейнеров не менялось. Числовой баланс предварительный.";
+      }
+      public static function factorySettingLabel():String {
+         var active:int=World.w==null?-1:factoryActive(World.w.land);
+         return active<0?"Завод: выбор сложности перед входом":"Завод: "+factoryNames[active]+" (текущий поход)";
+      }
+      public static function factoryLandStart(land:Object):void {
+         if(land==null||land.act==null||land.act.id!="random_plant"||factoryLands[land]!=null)return;
+         factoryLands[land]=factorySelected();
+      }
+      public static function factoryActive(land:Object):int {
+         if(land==null||land.act==null||land.act.id!="random_plant")return -1;
+         if(factoryLands[land]==null)factoryLandStart(land);
+         return int(factoryLands[land]);
+      }
+      public static function factoryEntered(land:Object):void {
+         var mode:int=factoryActive(land);if(mode<0||World.w==null||World.w.gui==null)return;
+         World.w.gui.infoText("skill","Завод — "+factoryNames[mode]);
+      }
+      public static function factoryEliteType(mode:int,roll:Number):int {
+         var chance:Number=factoryProfile(mode).elite;
+         if(chance<=0||roll<0||roll>=chance)return 0;
+         return 2+Math.min(2,int(roll/chance*3));
+      }
+      public static function factoryRoll(unit:Object):Number {
+         var key:String=unit.loc.id+":"+unit.id+":"+Math.round(unit.X)+":"+Math.round(unit.Y)+":"+unit.loc.land.act.landStage;
+         var hash:uint=2166136261;
+         for(var i:int=0;i<key.length;i++)hash=uint(hash*31+key.charCodeAt(i));
+         return Number(hash%10000)/10000;
+      }
+      public static function factoryUnit(unit:Object):void {
+         if(unit==null||unit.player||unit.loc==null||unit.loc.land==null||unit.fraction==0||unit.fraction==100||unit.sost>=3||unit.invulner||factoryUnits[unit]!=null)return;
+         var mode:int=factoryActive(unit.loc.land);if(mode<0)return;
+         var original:Object={hp:unit.maxhp,damage:unit.dam,xp:unit.xp,hero:unit.hero,name:unit.nazv,walk:unit.walkSpeed,sit:unit.sitSpeed,run:unit.runSpeed,observ:unit.observ,color:unit.cTransform,weapon:unit.currentWeapon==null?0:unit.currentWeapon.damage,weaponExpl:unit.currentWeapon==null?0:unit.currentWeapon.damageExpl,weaponMult:unit.currentWeapon==null?1:unit.currentWeapon.damMult};
+         var base:Object={mode:-1,original:original,roll:factoryRoll(unit)};
+         factoryUnits[unit]=base;
+         factoryApply(unit,mode,true);
+      }
+      public static function factoryState(unit:Object):Object {return factoryUnits[unit];}
+      private static function factoryApply(unit:Object,mode:int,initial:Boolean=false):void {
+         var s:Object=factoryUnits[unit];if(s==null||s.mode==mode||unit.sost>=3)return;
+         // Boss phases can replace weapons and change movement/attack values. Scale their
+         // current phase by a ratio instead of restoring the initial phase snapshot.
+         if(!initial&&unit.boss){
+            var old:Object=factoryProfile(s.mode);var next:Object=factoryProfile(mode);
+            unit.maxhp*=next.hp/old.hp;unit.hp*=next.hp/old.hp;unit.dam*=next.damage/old.damage;
+            if(unit.currentWeapon!=null){
+               var same:Boolean=unit.currentWeapon.id==s.weaponID;var multiplier:Number=next.damage/(same?old.damage:1);
+               if(unit.currentWeapon.tip<=1){unit.currentWeapon.damage*=multiplier;unit.currentWeapon.damageExpl*=multiplier;}else unit.currentWeapon.damMult*=multiplier;
+            }
+            if(unit.xp>0)unit.xp=Math.round(s.xp*next.xp);s.mode=mode;s.hp=unit.maxhp/next.hp;s.damage=unit.dam/next.damage;s.weaponID=unit.currentWeapon==null?"":unit.currentWeapon.id;
+            return;
+         }
+         var o:Object=s.original;var ratio:Number=unit.maxhp>0?Math.max(0,Math.min(1,unit.hp/unit.maxhp)):1;
+         var reward:Boolean=initial||unit.xp>0;var p:Object=factoryProfile(mode);
+         unit.maxhp=unit.hp=o.hp;unit.dam=o.damage;unit.xp=o.xp;unit.hero=o.hero;unit.nazv=o.name;
+         unit.walkSpeed=o.walk;unit.sitSpeed=o.sit;unit.runSpeed=o.run;unit.observ=o.observ;unit.cTransform=o.color;
+         if(unit.currentWeapon!=null){unit.currentWeapon.damage=o.weapon;unit.currentWeapon.damageExpl=o.weaponExpl;unit.currentWeapon.damMult=o.weaponMult;}
+         var elite:int=unit.hero==0&&unit.mHero&&!unit.boss?factoryEliteType(mode,s.roll):0;
+         if(elite>0){unit.setHero(elite);unit.cTransform=Unit.heroTransforms[elite-1];}
+         if(elite>0||int(s.elite)>0)unit.setEffParams();if(unit.vis!=null&&unit.cTransform!=null)unit.vis.transform.colorTransform=unit.cTransform;
+         s.mode=mode;s.elite=elite;s.hp=unit.maxhp;s.damage=unit.dam;s.xp=unit.xp;s.weapon=unit.currentWeapon==null?0:unit.currentWeapon.damage;s.weaponMult=unit.currentWeapon==null?1:unit.currentWeapon.damMult;s.weaponID=unit.currentWeapon==null?"":unit.currentWeapon.id;
+         unit.maxhp*=p.hp;unit.hp=unit.maxhp*ratio;unit.dam*=p.damage;
+         if(unit.currentWeapon!=null){if(unit.currentWeapon.tip<=1){unit.currentWeapon.damage*=p.damage;unit.currentWeapon.damageExpl*=p.damage;}else unit.currentWeapon.damMult*=p.damage;}
+         unit.xp=reward?Math.round(unit.xp*p.xp):0;
+      }
+      private static function factoryCollect(value:Object,result:Array,seen:Dictionary):void {
+         if(value==null||seen[value])return;seen[value]=true;
+         if(value is Location){result.push(value);return;}
+         if(value is Array)for each(var child:Object in value)factoryCollect(child,result,seen);
+      }
+      public static function factoryLocations(land:Object):Array {
+         var list:Array=[];var seen:Dictionary=new Dictionary(true);factoryCollect(land.locs,list,seen);factoryCollect(land.probs,list,seen);factoryCollect(land.listLocs,list,seen);return list;
+      }
+      public static function factoryRefresh(land:Object,mode:int):void {
+         if(land==null||land.act.id!="random_plant")return;
+         factoryLands[land]=mode;var delta:int=0;
+         for each(var loc:Object in factoryLocations(land))for each(var unit:Object in loc.units){
+            if(factoryUnits[unit]==null||unit.sost>=3)continue;
+            var xp:int=unit.xp;factoryApply(unit,mode);var change:int=unit.xp-xp;
+            loc.summXp+=change;delta+=change;
+         }
+         land.allXp+=delta;
+      }

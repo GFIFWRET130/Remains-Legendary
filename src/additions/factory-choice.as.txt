@@ -1,0 +1,80 @@
+      private static var factoryPending:Object;
+      private static var factoryBypass:Boolean=false;
+      public static function factoryChoiceState():Object {return factoryPending==null?{open:false}:{open:true,mode:factoryPending.mode,kind:factoryPending.kind};}
+      public static function factoryBegin(id:String):Boolean {
+         var w:Object=World.w;
+         if(factoryBypass||w==null||w.game==null||id!="random_plant"||w.game.curLandId==id||(w.allStat<1||w.allStat>2))return true;
+         if(!w.pers.dopusk()||w.pers.speedShtr>=3)return true;
+         factoryOpen({game:w.game,id:id,coord:null,flag:false,kind:"begin"});return false;
+      }
+      public static function factoryTravel(game:Object,id:String,coord:String,flag:Boolean):Boolean {
+         var w:Object=World.w;
+         if(factoryBypass||w==null||id!="random_plant"||(w.allStat<1||w.allStat>2))return true;
+         if(!w.pers.dopusk()||w.pers.speedShtr>=3)return true;
+         if(game.curLandId==id&&w.land!=null&&w.land.act.id==id)return true;
+         factoryOpen({game:game,id:id,coord:coord,flag:flag,kind:"travel"});return false;
+      }
+      private static function factoryText(parent:Sprite,text:String,x:Number,y:Number,width:Number,height:Number,size:int=18):TextField {
+         var field:TextField=new TextField();field.defaultTextFormat=new TextFormat("Arial",size,0x99ffdd);field.wordWrap=true;field.selectable=false;field.mouseEnabled=false;
+         field.x=x;field.y=y;field.width=width;field.height=height;field.text=text;parent.addChild(field);return field;
+      }
+      private static function factoryButton(parent:Sprite,id:String,label:String,x:Number,y:Number,width:Number):Sprite {
+         var button:Sprite=new Sprite();button.name=id;button.x=x;button.y=y;button.buttonMode=true;
+         button.graphics.lineStyle(1,0x44ddaa);button.graphics.beginFill(0x102d27);button.graphics.drawRoundRect(0,0,width,36,8);button.graphics.endFill();
+         factoryText(button,label,12,5,width-20,28,17);button.addEventListener(MouseEvent.MOUSE_DOWN,factoryClick);parent.addChild(button);return button;
+      }
+      private static function factoryOpen(request:Object):void {
+         if(factoryPending!=null)return;
+         var w:Object=World.w;request.pause=w.onPause;request.mode=factorySelected();request.buttons=[];
+         var root:Sprite=new Sprite();root.name="legendary_factory_difficulty";request.root=root;
+         var panel:Sprite=new Sprite();panel.name="factory_panel";request.panel=panel;root.addChild(panel);
+         panel.graphics.lineStyle(2,0x55eebb);panel.graphics.beginFill(0x081b17,.98);panel.graphics.drawRoundRect(0,0,620,516,18);panel.graphics.endFill();
+         factoryText(panel,"Завод — выберите сложность",24,16,574,38,25);
+         factoryText(panel,"Все пять режимов доступны при каждом входе",24,56,574,28,16);
+         var roman:Array=["I","II","III","IV","V"];
+         for(var i:int=0;i<5;i++)request.buttons.push(factoryButton(panel,"factory_mode_"+i,roman[i]+".  "+factoryNames[i],24,94+i*42,572));
+         request.info=factoryText(panel,"",24,312,572,116,16);
+         factoryButton(panel,"factory_confirm","Войти на Завод",24,448,276);
+         factoryButton(panel,"factory_cancel","Отмена",320,448,276);
+         root.addEventListener(MouseEvent.MOUSE_DOWN,factoryStop);root.addEventListener(MouseEvent.MOUSE_UP,factoryStop);root.addEventListener(MouseEvent.MOUSE_WHEEL,factoryStop);
+         factoryPending=request;w.onPause=true;w.ctr.clearAll();w.main.addChild(root);
+         w.swfStage.addEventListener(KeyboardEvent.KEY_DOWN,factoryKey,true,10000);w.swfStage.addEventListener(KeyboardEvent.KEY_DOWN,factoryKey,false,10000);
+         w.swfStage.addEventListener(KeyboardEvent.KEY_UP,factoryKey,true,10000);w.swfStage.addEventListener(KeyboardEvent.KEY_UP,factoryKey,false,10000);
+         w.swfStage.addEventListener(Event.RESIZE,factoryResize);factoryResize();factoryPaint();
+      }
+      private static function factoryStop(event:MouseEvent):void {event.stopImmediatePropagation();}
+      private static function factoryKey(event:KeyboardEvent):void {
+         if(factoryPending==null)return;event.stopImmediatePropagation();World.w.ctr.clearAll();
+         if(event.type==KeyboardEvent.KEY_DOWN&&event.keyCode==27)factoryClose(false);
+      }
+      private static function factoryResize(event:Event=null):void {
+         if(factoryPending==null)return;var w:Object=World.w;var root:Sprite=factoryPending.root;var panel:Sprite=factoryPending.panel;
+         root.graphics.clear();root.graphics.beginFill(0,.82);root.graphics.drawRect(0,0,w.swfStage.stageWidth,w.swfStage.stageHeight);root.graphics.endFill();
+         var scale:Number=Math.min(1,(w.swfStage.stageWidth-24)/620,(w.swfStage.stageHeight-24)/516);panel.scaleX=panel.scaleY=scale;
+         panel.x=(w.swfStage.stageWidth-620*scale)*.5;panel.y=(w.swfStage.stageHeight-516*scale)*.5;
+      }
+      private static function factoryPaint():void {
+         if(factoryPending==null)return;var chosen:int=factoryPending.mode;var p:Object=factoryProfile(chosen);
+         for(var i:int=0;i<5;i++){var button:Sprite=factoryPending.buttons[i];button.graphics.clear();button.graphics.lineStyle(i==chosen?2:1,i==chosen?0xffd166:0x44ddaa);button.graphics.beginFill(i==chosen?0x34513a:0x102d27);button.graphics.drawRoundRect(0,0,572,36,8);button.graphics.endFill();}
+         var descriptions:Array=["Для спокойного прохождения и исследования.","Обычная сложность столкновений.","Более опасные противники и серьёзные столкновения.","Очень опасные бои для подготовленных персонажей.","Максимальное испытание для хорошо экипированных игроков."];
+         factoryPending.info.text=descriptions[chosen]+"\nHP врагов ×"+p.hp+"  •  Урон ×"+p.damage+"  •  Опыт ×"+p.xp+"\nДополнительная элита: "+Math.round(p.elite*100)+"%. Баланс тестовый.\nВыбор действует на этот заход. Задания и предметы сохраняются.";
+      }
+      private static function factoryClick(event:MouseEvent):void {
+         event.stopImmediatePropagation();if(factoryPending==null)return;
+         var id:String=event.currentTarget.name;
+         if(id.indexOf("factory_mode_")==0){factoryPending.mode=int(id.substr(13));factoryPaint();return;}
+         factoryClose(id=="factory_confirm");
+      }
+      public static function factoryClose(accept:Boolean):void {
+         if(factoryPending==null)return;var request:Object=factoryPending;factoryPending=null;var w:Object=World.w;
+         w.swfStage.removeEventListener(KeyboardEvent.KEY_DOWN,factoryKey,true);w.swfStage.removeEventListener(KeyboardEvent.KEY_DOWN,factoryKey,false);
+         w.swfStage.removeEventListener(KeyboardEvent.KEY_UP,factoryKey,true);w.swfStage.removeEventListener(KeyboardEvent.KEY_UP,factoryKey,false);w.swfStage.removeEventListener(Event.RESIZE,factoryResize);
+         if(request.root.parent!=null)request.root.parent.removeChild(request.root);w.onPause=request.pause;w.ctr.clearAll();
+         if(!accept||w.game!=request.game)return;
+         w.game.triggers["legendary_factory_mode"]=request.mode+1;
+         factoryBypass=true;
+         try {
+            if(request.kind=="begin")request.game.beginMission(request.id);
+            else {var act:Object=request.game.lands[request.id];if(!request.game.crea&&act!=null&&act.land!=null)factoryRefresh(act.land,request.mode);request.game.gotoLand(request.id,request.coord,request.flag);}
+         } finally {factoryBypass=false;}
+      }

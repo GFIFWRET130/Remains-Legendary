@@ -1,0 +1,203 @@
+   internal dynamic class BreadVisual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip; public var lez:flash.display.MovieClip; private var loader:flash.display.Loader;
+      public function BreadVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,85,85*.3);graphics.endFill();emit=new flash.display.MovieClip();emit.x=85-15;emit.y=-5;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);loader=new flash.display.Loader();loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,failed);loader.load(new flash.net.URLRequest("app:/Assets/Bread.png"));}
+      private function loaded(e:flash.events.Event):void{var b:flash.display.Bitmap=loader.content as flash.display.Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=85/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
+      private function failed(e:flash.events.IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,85,8);graphics.endFill();}
+   }
+   internal dynamic class ValeraVisual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip; public var lez:flash.display.MovieClip; private var loader:flash.display.Loader;
+      public function ValeraVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,46,46*.3);graphics.endFill();emit=new flash.display.MovieClip();emit.x=46-15;emit.y=-5;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);loader=new flash.display.Loader();loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,failed);loader.load(new flash.net.URLRequest("app:/Assets/Valera.png"));}
+      private function loaded(e:flash.events.Event):void{var b:flash.display.Bitmap=loader.content as flash.display.Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=46/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
+      private function failed(e:flash.events.IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,46,8);graphics.endFill();}
+   }
+   internal dynamic class GoldenVisual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip; public var lez:flash.display.MovieClip; private var loader:flash.display.Loader;
+      public function GoldenVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,85,85*.3);graphics.endFill();emit=new flash.display.MovieClip();emit.x=85-15;emit.y=-5;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);loader=new flash.display.Loader();loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,failed);loader.load(new flash.net.URLRequest("app:/Assets/Golden-Sun.png"));}
+      private function loaded(e:flash.events.Event):void{var b:flash.display.Bitmap=loader.content as flash.display.Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=85/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
+      private function failed(e:flash.events.IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,85,8);graphics.endFill();}
+   }
+   internal dynamic class ExcaliburVisual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip; public var lez:flash.display.MovieClip; private var loader:flash.display.Loader;
+      public function ExcaliburVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,85,85*.3);graphics.endFill();emit=new flash.display.MovieClip();emit.x=85-15;emit.y=-5;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);loader=new flash.display.Loader();loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,failed);loader.load(new flash.net.URLRequest("app:/Assets/Excalibur.png"));}
+      private function loaded(e:flash.events.Event):void{var b:flash.display.Bitmap=loader.content as flash.display.Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=85/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
+      private function failed(e:flash.events.IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,85,8);graphics.endFill();}
+   }
+   internal dynamic class VigilanceVisual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip; public var lez:flash.display.MovieClip; private var loader:flash.display.Loader;
+      public function VigilanceVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,48,48*.3);graphics.endFill();emit=new flash.display.MovieClip();emit.x=48-15;emit.y=-5;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);loader=new flash.display.Loader();loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,failed);loader.load(new flash.net.URLRequest("app:/Assets/Vigilance.png"));}
+      private function loaded(e:flash.events.Event):void{var b:flash.display.Bitmap=loader.content as flash.display.Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=48/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
+      private function failed(e:flash.events.IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,48,8);graphics.endFill();}
+   }
+   internal dynamic class BatonVisual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip; public var lez:flash.display.MovieClip; private var loader:flash.display.Loader;
+      public function BatonVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,65,65*.3);graphics.endFill();emit=new flash.display.MovieClip();emit.x=65-15;emit.y=-5;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);loader=new flash.display.Loader();loader.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,failed);loader.load(new flash.net.URLRequest("app:/Assets/Police-Baton.png"));}
+      private function loaded(e:flash.events.Event):void{var b:flash.display.Bitmap=loader.content as flash.display.Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=65/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
+      private function failed(e:flash.events.IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,65,8);graphics.endFill();}
+   }
+
+
+   internal dynamic class Arsenal1Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal1Visual(){super();emit=new flash.display.MovieClip();emit.x=44;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-01.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=59/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-01");}
+   }
+
+   internal dynamic class Arsenal2Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal2Visual(){super();emit=new flash.display.MovieClip();emit.x=47;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-02.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=62/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-02");}
+   }
+
+   internal dynamic class Arsenal3Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal3Visual(){super();emit=new flash.display.MovieClip();emit.x=47;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-03.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=62/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-03");}
+   }
+
+   internal dynamic class Arsenal4Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal4Visual(){super();emit=new flash.display.MovieClip();emit.x=75;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-04.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=90/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-04");}
+   }
+
+   internal dynamic class Arsenal5Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal5Visual(){super();emit=new flash.display.MovieClip();emit.x=78;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-05.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=93/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-05");}
+   }
+
+   internal dynamic class Arsenal6Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal6Visual(){super();emit=new flash.display.MovieClip();emit.x=95;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-06.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=110/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-06");}
+   }
+
+   internal dynamic class Arsenal7Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal7Visual(){super();emit=new flash.display.MovieClip();emit.x=110;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-07.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=125/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-07");}
+   }
+
+   internal dynamic class Arsenal8Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal8Visual(){super();emit=new flash.display.MovieClip();emit.x=65;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-08.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=80/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-08");}
+   }
+
+   internal dynamic class Arsenal9Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal9Visual(){super();emit=new flash.display.MovieClip();emit.x=45;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-09.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=60/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-09");}
+   }
+
+   internal dynamic class Arsenal10Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal10Visual(){super();emit=new flash.display.MovieClip();emit.x=77;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-10.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=92/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-10");}
+   }
+
+   internal dynamic class Arsenal11Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal11Visual(){super();emit=new flash.display.MovieClip();emit.x=78;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-11.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=93/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-11");}
+   }
+
+   internal dynamic class Arsenal12Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal12Visual(){super();emit=new flash.display.MovieClip();emit.x=79;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-12.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=94/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-12");}
+   }
+
+   internal dynamic class Arsenal13Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal13Visual(){super();emit=new flash.display.MovieClip();emit.x=83;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-13.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=98/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-13");}
+   }
+
+   internal dynamic class Arsenal14Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal14Visual(){super();emit=new flash.display.MovieClip();emit.x=105;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-14.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=120/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-14");}
+   }
+
+   internal dynamic class Arsenal15Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal15Visual(){super();emit=new flash.display.MovieClip();emit.x=97;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-15.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=112/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-15");}
+   }
+
+   internal dynamic class Arsenal16Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal16Visual(){super();emit=new flash.display.MovieClip();emit.x=83;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-16.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=98/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-16");}
+   }
+
+   internal dynamic class Arsenal17Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal17Visual(){super();emit=new flash.display.MovieClip();emit.x=90;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-17.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=105/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-17");}
+   }
+
+   internal dynamic class Arsenal18Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal18Visual(){super();emit=new flash.display.MovieClip();emit.x=100;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-18.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=115/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-18");}
+   }
+
+   internal dynamic class Arsenal19Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal19Visual(){super();emit=new flash.display.MovieClip();emit.x=90;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-19.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=105/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-19");}
+   }
+
+   internal dynamic class Arsenal20Visual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;private var art:flash.display.Loader;
+      public function Arsenal20Visual(){super();emit=new flash.display.MovieClip();emit.x=85;emit.y=-6;addChild(emit);lez=new flash.display.MovieClip();addChild(lez);art=new flash.display.Loader();art.contentLoaderInfo.addEventListener(flash.events.Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(flash.events.IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new flash.net.URLRequest("app:/Assets/Arsenal-20.png"));}
+      private function arsenalLoaded(e:flash.events.Event):void{var bitmap:flash.display.Bitmap=art.content as flash.display.Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=100/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
+      private function arsenalFailed(e:flash.events.IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-20");}
+   }
+
+   internal dynamic class FlashbangVisual extends flash.display.MovieClip {
+      public var emit:flash.display.MovieClip;public var lez:flash.display.MovieClip;
+      public function FlashbangVisual(){
+         super();var g:flash.display.Graphics=graphics;g.lineStyle(1,0x10191B);g.beginFill(0x87938D);g.drawRoundRect(-8,-11,16,25,5,5);g.endFill();g.beginFill(0xEDF1D6);g.drawRect(-8,-2,16,6);g.endFill();
+         g.lineStyle(1,0x24302D);for(var i:int=0;i<4;i++){g.moveTo(-5+i*3,-8);g.lineTo(-5+i*3,-4);g.moveTo(-5+i*3,7);g.lineTo(-5+i*3,11);}
+         g.beginFill(0xD7BD59);g.drawRoundRect(-7,-15,13,5,2,2);g.endFill();g.lineStyle(1.5,0xA7B1AA);g.drawCircle(7,-14,3);g.lineStyle(2,0x303C38);g.moveTo(0,-15);g.lineTo(10,-10);g.lineTo(10,5);
+         emit=new flash.display.MovieClip();lez=new flash.display.MovieClip();addChild(emit);addChild(lez);
+      }
+   }
+
+   internal dynamic class AuroraShot extends MovieClip {public var laser:MovieClip;public function AuroraShot(){super();laser=new MovieClip();addChild(laser);var g:Graphics=laser.graphics;g.lineStyle(7,0x44ddbb,.18);g.moveTo(-100,0);g.lineTo(0,0);g.lineStyle(2,0x99ffee,.95);g.moveTo(-100,0);g.lineTo(0,0);g.beginFill(0xd0fff6);g.moveTo(5,0);g.lineTo(-5,-3);g.lineTo(-12,0);g.lineTo(-5,3);g.endFill();}}
+
+   internal dynamic class LunarShot extends MovieClip {public var laser:MovieClip;public function LunarShot(){super();laser=new MovieClip();addChild(laser);var g:Graphics=laser.graphics;g.lineStyle(5,0x8055cc,.3);g.moveTo(-100,0);g.lineTo(0,0);g.lineStyle(1.2,0xe6dcff);g.moveTo(-100,0);g.lineTo(0,0);graphics.beginFill(0xf2eaff);graphics.moveTo(8,0);graphics.lineTo(-12,-2);graphics.lineTo(-7,0);graphics.lineTo(-12,2);graphics.endFill();}}
+
+   internal dynamic class RainbowShot extends MovieClip {public var laser:MovieClip;public function RainbowShot(){super();laser=new MovieClip();addChild(laser);var colors:Array=[0xff5577,0xffaa44,0xffee66,0x66ff99,0x66bbff,0xc488ff];var c:uint=colors[Pers.rainbowColor++%6];laser.graphics.lineStyle(6,c,.2);laser.graphics.moveTo(-100,0);laser.graphics.lineTo(0,0);laser.graphics.lineStyle(1.5,c);laser.graphics.moveTo(-100,0);laser.graphics.lineTo(0,0);}}
+
+   internal dynamic class StormShot extends MovieClip {public var laser:MovieClip;public var core:MovieClip;public function StormShot(){super();core=new MovieClip();addChild(core);core.graphics.beginFill(0x66ccff,.12);core.graphics.drawCircle(0,0,13);core.graphics.endFill();core.graphics.lineStyle(2,0x66bbff,.8);core.graphics.drawCircle(0,0,8);core.graphics.lineStyle(1.5,0xe0ffff);core.graphics.moveTo(-12,-3);core.graphics.lineTo(-4,1);core.graphics.lineTo(-1,-5);core.graphics.lineTo(3,3);core.graphics.lineTo(12,-1);core.graphics.beginFill(0xffffff);core.graphics.drawCircle(0,0,3);core.graphics.endFill();}}
+
+   internal dynamic class SurpriseShot extends MovieClip {public var laser:MovieClip;public var core:MovieClip;public function SurpriseShot(){super();core=new MovieClip();addChild(core);core.graphics.beginFill(0x99ff55,.13);core.graphics.drawCircle(0,0,20);core.graphics.endFill();core.graphics.beginFill(0x44dd55,.65);core.graphics.drawCircle(0,0,13);core.graphics.endFill();core.graphics.lineStyle(2,0xdbff88);core.graphics.drawEllipse(-15,-7,30,14);core.graphics.drawEllipse(-7,-15,14,30);core.graphics.beginFill(0xeaffbb);core.graphics.drawCircle(0,0,6);core.graphics.endFill();}}
+
+   internal dynamic class SonicShot extends MovieClip {public var laser:MovieClip;public function SonicShot(){super();for(var i:int=0;i<4;i++){graphics.lineStyle(1.8,0xccf6ff,1-i*.2);graphics.moveTo(-i*8,-6-i*4);graphics.curveTo(7-i*8,0,-i*8,6+i*4);}graphics.lineStyle(4,0x88ddee,.08);graphics.drawEllipse(-32,-20,40,40);}}
+
+   internal dynamic class AshShot extends MovieClip {public var laser:MovieClip;public function AshShot(){super();graphics.lineStyle(4,0x443e48,.5);graphics.moveTo(-23,0);graphics.lineTo(-8,0);graphics.beginFill(0xff6633,.25);graphics.drawCircle(0,0,9);graphics.endFill();graphics.beginFill(0xffa13d);graphics.moveTo(7,0);graphics.lineTo(-4,-5);graphics.lineTo(-10,-2);graphics.lineTo(-17,-3);graphics.lineTo(-10,3);graphics.lineTo(-4,5);graphics.endFill();graphics.beginFill(0xfff0b8);graphics.drawEllipse(-4,-2,9,4);graphics.endFill();}}
+
+   internal dynamic class CeilingRocket extends MovieClip {public var laser:MovieClip;public function CeilingRocket(){super();graphics.beginFill(0xff6d24,.65);graphics.moveTo(-14,-3);graphics.lineTo(-32,0);graphics.lineTo(-14,3);graphics.endFill();graphics.beginFill(0xffee99);graphics.moveTo(-14,-1.5);graphics.lineTo(-25,0);graphics.lineTo(-14,1.5);graphics.endFill();graphics.lineStyle(1,0x222821);graphics.beginFill(0x566345);graphics.moveTo(-16,-3);graphics.lineTo(-20,-8);graphics.lineTo(-10,-5);graphics.lineTo(2,-7);graphics.curveTo(12,-5,18,0);graphics.curveTo(12,5,2,7);graphics.lineTo(-10,5);graphics.lineTo(-20,8);graphics.lineTo(-16,3);graphics.endFill();graphics.lineStyle();graphics.beginFill(0xd4b442);graphics.drawRect(0,-6,2,12);graphics.drawRect(5,-5,2,10);graphics.endFill();graphics.beginFill(0xb5bab1);graphics.moveTo(14,-2.5);graphics.lineTo(18,0);graphics.lineTo(14,2.5);graphics.endFill();}}

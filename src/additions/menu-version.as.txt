@@ -1,0 +1,10 @@
+      public static const legendaryVersion:String = "__RELEASE_VERSION__";
+      public static function legendaryMenuVersion(menu:Object):void {
+         if(menu==null||menu.version==null)return;
+         menu.version.htmlText="<b>"+Res.guiText("version")+" Legendary "+legendaryVersion+"</b>";
+         menu.version.width=270;menu.version.height=30;menu.version.mouseEnabled=false;
+         if(World.w!=null&&World.w.swfStage!=null){
+            var stageObject:Object=World.w.swfStage;
+            try{var window:Object=stageObject.nativeWindow;if(window!=null)window.title="Remains Legendary "+legendaryVersion;}catch(error:Error){}
+         }
+      }
