@@ -1,0 +1,28 @@
+{
+  "version": "0.4.8",
+  "ffdecVersion": "26.4.0",
+  "originalSwfSha256": "3cb37d48df3dc5721b0752e634b8e8d7e66c3487fdbe0b3b654651f634beaf8e",
+  "testedLocalSwfSha256": "a3377edb453d7b2b40229ce8c3e0c3ba59d44e67d60949610758b24bb1132f47",
+  "classes": [
+    {
+      "path": "fe/unit/Pers.as",
+      "originalNormalizedSha256": "bf3457e5e77113f6c4291dea9721e4c15fa181728de6cf853289e96cc30e43a1",
+      "modifiedNormalizedSha256": "8c6ed7e814db9834930b5aecb15aa104c7764587ee625cbbe3620344c32cf42e"
+    },
+    {
+      "path": "fe/inter/GUI.as",
+      "originalNormalizedSha256": "e4790035f96431b92401423850ae0173cc660323308b264be47b0ae29ba771e3",
+      "modifiedNormalizedSha256": "15e7f43cbc93d29c525d040bcda23ac144088fa2e6e997ad63d5e186491d29b7"
+    },
+    {
+      "path": "fe/inter/PipPageOpt.as",
+      "originalNormalizedSha256": "6ec380ccdb8daebcc1728ff7c0470fc63134e94896e40e08a21ba9ceb630f7e5",
+      "modifiedNormalizedSha256": "12a6f3069de5ea4451fb7423d0cd0439420bd27cda9f95bf3f50721fdfaf86cf"
+    },
+    {
+      "path": "fe/inter/PipPageStat.as",
+      "originalNormalizedSha256": "1e6c235dbc3cd31968043ce5f47b3b176b82bbe2c1bc42da3d33ce46f95b4aaf",
+      "modifiedNormalizedSha256": "12321fa3f5e2763d3486900e92398cb255e60032db57261efc3ea7b69711942b"
+    }
+  ]
+}
