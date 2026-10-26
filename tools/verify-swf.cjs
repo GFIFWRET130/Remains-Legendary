@@ -1,0 +1,5 @@
+const fs=require('fs'),zlib=require('zlib'),crypto=require('crypto'),assert=require('assert');
+const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+function tags(file){let b=fs.readFileSync(file);if(b.toString('ascii',0,3)==='CWS')b=Buffer.concat([Buffer.from('FWS'),b.subarray(3,8),zlib.inflateSync(b.subarray(8))]);assert.equal(b.toString('ascii',0,3),'FWS');let p=8+Math.ceil((5+4*(b[8]>>3))/8)+4,result=[];while(p<b.length){let h=b.readUInt16LE(p),id=h>>6,n=h&63;p+=2;if(n===63){n=b.readUInt32LE(p);p+=4;}const data=b.subarray(p,p+n);p+=n;if(id!==82)result.push({id,length:n,sha256:hash(data)});if(id===0)break;}return result;}
+const [original,modified]=process.argv.slice(2);if(!original||!modified)throw Error('Usage: node tools/verify-swf.cjs <original.swf> <modified.swf>');
+const before=tags(original),after=tags(modified);assert.deepEqual(after,before,'Non-code game resources changed');console.log('PASS: all '+before.length+' original non-code SWF tags are identical.');console.log('Modified SWF SHA256 '+hash(fs.readFileSync(modified)));

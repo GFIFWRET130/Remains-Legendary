@@ -1,0 +1,8 @@
+const fs=require('fs'),path=require('path'),crypto=require('crypto'),assert=require('assert');
+const root=path.resolve(__dirname,'..');const files=[];
+function walk(dir){for(const item of fs.readdirSync(dir,{withFileTypes:true})){if(['.git','.build','dist','local','logs'].includes(item.name))continue;const file=path.join(dir,item.name);if(item.isDirectory())walk(file);else files.push(file);}}
+walk(root);
+for(const file of files){assert(!/\.(swf|exe|dll|sav|sol|bak|zip|jar|pem|key)$/i.test(file),'Excluded binary/private file: '+file);if(file.endsWith('.png'))continue;const s=fs.readFileSync(file,'utf8');assert(!/[A-Z]:[\\/](?:Users|SteamLibrary|Program Files)[\\/]/i.test(s),'Local machine path: '+file);assert(!/gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/.test(s),'Potential credential: '+file);}
+const catalog=require('../art/catalog.json');assert.equal(catalog.length,34);for(const item of catalog){const b=fs.readFileSync(path.join(root,'art',item.file));assert.equal(b.subarray(0,8).toString('hex'),'89504e470d0a1a0a');assert.equal(crypto.createHash('sha256').update(b).digest('hex'),item.sha256);}
+const readme=fs.readFileSync(path.join(root,'README.md'),'utf8');for(const text of ['Remains Legendary — A Community Project','Remains Legendary — проект для сообщества','indefinite hiatus','Полноценной балансировкой я не занимался','нейросети'])assert(readme.includes(text),'Missing README disclosure: '+text);
+console.log(JSON.stringify({status:'PASS',files:files.length,images:catalog.length,bytes:files.reduce((n,p)=>n+fs.statSync(p).size,0),excluded:['full game','compiled SWF','AIR/runtime','personal saves','credentials','local machine paths']},null,2));
