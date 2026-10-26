@@ -1,0 +1,74 @@
+      private var factoryTestBase:Land;
+      private var factoryTestGame:Game;
+      private var factoryTestMode:int=0;
+      private var factoryTestCount:int=0;
+      private var factoryTestLast:Land;
+      private function factoryCheck(actual:Number,expected:Number,label:String):void {
+         if(isNaN(actual)||Math.abs(actual-expected)>.001)throw new Error(label+": "+actual+" expected "+expected);
+         factoryTestCount++;
+      }
+      private function factorySettings(w:World):void {
+         if(Pers.factorySelected()!=1)throw new Error("Old save/new game default is not Medium");
+         factoryTestBase=w.land;factoryTestGame=w.game;
+         w.pip.onoff(5,3);var row:Object=findRow(w.vpip,"legendary_factory");if(row==null)throw new Error("Factory setting missing");
+         row.dispatchEvent(new MouseEvent(MouseEvent.CLICK));if(Pers.factorySelected()!=1)throw new Error("Read-only help changed difficulty");
+         snapshot(w.vpip,"factory-settings");w.pip.onoff(-1);
+         for(var mode:int=0;mode<5;mode++){
+            if(!Pers.factoryChoose(mode)||Pers.factorySelected()!=mode)throw new Error("Mode selection failed "+mode);
+            var saved:Object=w.game.save();var bytes:ByteArray=new ByteArray();bytes.writeObject(saved);bytes.position=0;var restored:Object=bytes.readObject();
+            var loaded:Game=new Game();loaded.init(restored);w.game=loaded;
+            if(Pers.factorySelected()!=mode)throw new Error("Native game save/load lost mode "+mode);w.game=factoryTestGame;
+            if(saved.dif!=w.game.globalDif)throw new Error("Global difficulty changed");
+            var p:Object=Pers.factoryProfile(mode);var count:int=0;
+            for(var roll:int=0;roll<1000;roll++)if(Pers.factoryEliteType(mode,roll/1000)>0)count++;
+            factoryCheck(count,Math.round(p.elite*1000),"Additional elite probability "+mode);
+         }
+         if(Pers.factoryChoose(-1)||Pers.factoryChoose(5))throw new Error("Invalid mode accepted");
+         delete w.game.triggers["legendary_factory_mode"];if(Pers.factorySelected()!=1)throw new Error("Absent saved selection not compatible");
+         trace("FACTORY PASS settings click, five native Game.save/init + AMF roundtrips, unchanged global difficulty, old-save default, exact elite rate boundaries");
+      }
+      private function factoryModeTest(w:World):void {
+         w.land=factoryTestBase;
+         var mode:int=factoryTestMode;if(!Pers.factoryChoose(mode))throw new Error("Pre-entry mode choice blocked");
+         var p:Object=Pers.factoryProfile(mode);var act:LandAct=w.game.lands["random_plant"];
+         if(act==null||!act.loaded)throw new Error("Factory rooms not loaded");
+         var land:Land=new Land(w.gg,act,8);factoryTestLast=land;
+         if(Pers.factoryActive(land)!=mode)throw new Error("Land not pinned before generation");
+         var enemies:int=0;var elite:int=0;var allXp:int=0;var first:Unit=null;
+         for each(var location:Location in Pers.factoryLocations(land)){
+            var xp:int=0;
+            for each(var unit:Unit in location.units){
+               xp+=unit.xp;var state:Object=Pers.factoryState(unit);
+               if(state==null)continue;
+               if(state.mode!=mode)throw new Error("Enemy wrong mode");enemies++;if(state.elite>0)elite++;if(first==null)first=unit;
+               factoryCheck(unit.maxhp,state.hp*p.hp,"HP multiplier");factoryCheck(unit.dam,state.damage*p.damage,"Contact damage multiplier");factoryCheck(unit.xp,Math.round(state.xp*p.xp),"XP multiplier");
+               if(unit.currentWeapon!=null){
+                  if(unit.currentWeapon.tip<=1)factoryCheck(unit.currentWeapon.damage,state.weapon*p.damage,"Melee weapon multiplier");
+                  else factoryCheck(unit.currentWeapon.damMult,state.weaponMult*p.damage,"Ranged damage multiplier");
+               }
+               var hp:Number=unit.maxhp;var damage:Number=unit.dam;var value:int=unit.xp;Pers.factoryUnit(unit);
+               factoryCheck(unit.maxhp,hp,"No repeated HP bonus");factoryCheck(unit.dam,damage,"No repeated damage bonus");factoryCheck(unit.xp,value,"No repeated XP bonus");
+            }
+            factoryCheck(location.summXp,xp,"Native room XP pool includes scaled enemies");allXp+=location.summXp;
+         }
+         if(enemies==0)throw new Error("No actual Factory enemies generated");
+         // Changing the future selection does not alter an existing generated expedition.
+         Pers.factoryChoose((mode+1)%5);factoryCheck(Pers.factoryActive(land),mode,"Expedition mode stays pinned");
+         w.land=land;if(Pers.factoryChoose((mode+1)%5))throw new Error("Can change mode inside Factory");
+         factoryCheck(Pers.factoryActive(land),mode,"In-Factory mode unchanged");w.land=factoryTestBase;
+         var ally:Unit=Unit.create("raider",1);ally.fraction=100;var allyHP:Number=ally.maxhp;ally.putLoc(first.loc,first.X,first.Y);if(Pers.factoryState(ally)!=null||ally.maxhp!=allyHP)throw new Error("Friendly was scaled");
+         var ordinary:Unit=Unit.create("raider",1);var ordinaryHP:Number=ordinary.maxhp;ordinary.putLoc(factoryTestBase.loc,w.gg.X,w.gg.Y);if(Pers.factoryState(ordinary)!=null||ordinary.maxhp!=ordinaryHP)throw new Error("Other location was scaled");
+         if(Pers.factoryState(w.gg)!=null)throw new Error("Player scaled");
+         trace("FACTORY MODE PASS "+mode+" "+p.name+" enemies="+enemies+" additionalElite="+elite+" XPpool="+allXp+"; multipliers, native XP pool, idempotence, pinned mode, friendly/other-location exclusions");
+         factoryTestMode++;
+      }
+      private function factoryEnterTest(w:World):void {
+         w.pip.onoff(-1);w.game.curLandId="random_plant";w.game.curLand=w.game.lands["random_plant"];
+         w.game.curLand.land=factoryTestLast;w.game.crea=false;w.game.curCoord=null;
+         w.game.enterToCurLand();w.onPause=true;
+         if(w.land!=factoryTestLast||w.loc==null||w.land.act.id!="random_plant"||Pers.factoryActive(w.land)!=4)throw new Error("Factory entry failed");
+         if(w.verror!=null&&w.verror.visible)throw new Error("Factory entry game error "+w.verror.txt.text);
+         stageSnapshot(w,"factory-highest-mode");w.pip.onoff(5,3);var row:Object=findRow(w.vpip,"legendary_factory");if(row==null)throw new Error("Setting vanished in Factory");
+         var selection:int=Pers.factorySelected();row.dispatchEvent(new MouseEvent(MouseEvent.CLICK));if(Pers.factorySelected()!=selection)throw new Error("UI bypassed inside Factory guard");
+         trace("FACTORY PASS actual enterToCurLand, drawn Factory scene, in-Factory setting cannot change expedition; assertions="+factoryTestCount);
+      }

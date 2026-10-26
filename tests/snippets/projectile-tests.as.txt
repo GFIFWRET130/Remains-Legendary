@@ -1,0 +1,80 @@
+      private function testBullet(w:World,id:String,x:Number,y:Number):Bullet {
+         var weapon:Object=w.invent.weapons[id];var b:Bullet=new Bullet(w.gg,x,y,weapon.vBullet);
+         b.weap=weapon;b.damage=10;b.tipDamage=weapon.tipDamage;b.vel=10;b.dx=10;b.knockx=1;b.knocky=0;b.liv=40;return b;
+      }
+      private function clearTestEffects(target:Object):void {
+         var list:Array=target.effects.concat();for each(var effect:Object in list)if(!effect.vse)effect.unsetEff(false,false,false);
+         target.effects=[];target.setEffParams();
+      }
+      private function projectileTests(w:World):void {
+         w.pip.onoff(-1);
+         var bx:Number=w.gg.X;var by:Number=w.gg.Y-w.gg.scY*.5;var clear:Boolean=false;
+         for(var off:int=-160;off<=160;off+=40){var px:Number=w.gg.X+off;if(w.loc.getAbsTile(px,by).phis==0&&w.loc.getAbsTile(px+80,by).phis==0&&w.loc.isLine(px,by,px+80,by)){bx=px;clear=true;break;}}
+         if(!clear)throw new Error("No projectile test corridor");
+         var oldUnits:Array=w.loc.units;w.loc.units=[w.gg];
+         try {
+            var enemy:Object=flashTarget(w,"raider",bx+70,by);enemy.maxhp=enemy.hp=10000;enemy.invulner=false;enemy.dexter=enemy.dexterPlus=0;
+            var originalSpeed:Number=enemy.tormoz;var before:Number=enemy.hp;
+            for(var i:int=1;i<=4;i++){
+               var b:Bullet=testBullet(w,"northern_lights",bx,by);b.targetObj=enemy;
+               for(var t:int=0;t<12&&!b.babah;t++)b.step();
+               if(enemy.hp>=before)throw new Error("Chill shot did not collide/damage");before=enemy.hp;
+               if(Math.abs(enemy.tormoz-(1-Math.min(3,i)*.1))>.001)throw new Error("Wrong chill stack "+i+" speed="+enemy.tormoz);
+            }
+            for(t=0;t<World.fps*4+2;t++){var list:Array=enemy.effects.concat();for each(var effect:Object in list)if(!effect.vse)effect.step();}
+            if(Math.abs(enemy.tormoz-originalSpeed)>.001)throw new Error("Chill did not expire");clearTestEffects(enemy);
+            trace("PROJECTILE PASS native collision, chill 10/20/30 cap and expiry");
+            b=testBullet(w,"lunar_debt",bx,by);var d:Number=Pers.legendaryTargetDamage(enemy,100,b);
+            if(d!=100||flashEffect(enemy,"legendary_lunar")==null)throw new Error("Lunar mark missing");
+            if(Pers.legendaryTargetDamage(enemy,100,b)!=100)throw new Error("Same projectile consumed own mark");
+            b=testBullet(w,"lunar_debt",bx,by);if(Pers.legendaryTargetDamage(enemy,100,b)!=135||flashEffect(enemy,"legendary_lunar")!=null)throw new Error("Lunar mark consume failed");
+            b=testBullet(w,"lunar_debt",bx,by);Pers.legendaryTargetDamage(enemy,100,b);
+            var mark:Object=flashEffect(enemy,"legendary_lunar");for(t=0;t<6*World.fps+2;t++)if(!mark.vse)mark.step();
+            b=testBullet(w,"lunar_debt",bx,by);if(Pers.legendaryTargetDamage(enemy,100,b)!=100)throw new Error("Expired lunar bonus persisted");clearTestEffects(enemy);
+            b=testBullet(w,"ash_star",bx,by);enemy.damage(10,b.tipDamage,b);var burn:Object=flashEffect(enemy,"burning");if(burn==null||burn.val!=8||burn.t!=120)throw new Error("Burn absent/wrong");
+            before=enemy.hp;burn.secEffect();if(enemy.hp>=before)throw new Error("Burn does no damage");
+            b=testBullet(w,"ash_star",bx,by);enemy.damage(10,b.tipDamage,b);if(flashEffect(enemy,"burning").val!=8)throw new Error("Burn damage stacks");clearTestEffects(enemy);
+            b=testBullet(w,"good_morning",bx,by);enemy.damage(10,b.tipDamage,b);if(b.tipDamage==8||flashEffect(enemy,"contusion")==null||flashEffect(enemy,"contusion").t!=60)throw new Error("Sonic contusion/type failed");clearTestEffects(enemy);
+            trace("PROJECTILE PASS lunar mark consume/expiry, burning actual damage/no stacking, sonic physical damage and 2s contusion");
+            var weapon:Object=w.invent.weapons["reverse_rainbow"];
+            if(w.gg.currentWeapon==null||w.gg.currentWeapon.id!=weapon.id)w.gg.changeWeapon(weapon.id,true);
+            w.gg.celX=bx+200;w.gg.celY=by;weapon.hold=weapon.holder;weapon.t_attack=weapon.rapid;weapon.t_reload=0;weapon.b=null;weapon.step();
+            var obj:Object=w.loc.lastObj;var rays:Array=[];
+            while(obj!=null&&rays.length<6){if(obj is Bullet&&obj.weap==weapon)rays.push(obj);obj=obj.pobj;}
+            if(rays.length!=6)throw new Error("Not six rainbow rays");
+            var origins:Object={};for each(b in rays){var cross:Number=(w.gg.celX-b.X)*b.dy-(w.gg.celY-b.Y)*b.dx;if(Math.abs(cross)>.01)throw new Error("Ray misses convergence point");origins[b.X+","+b.Y]=true;}
+            var count:int=0;for(var key:String in origins)count++;if(count!=6)throw new Error("Rainbow rays overlap origins");
+            trace("PROJECTILE PASS six distinct rainbow paths converge at aim point");
+            b=testBullet(w,"storm_jar",bx,by);weapon=w.invent.weapons["storm_jar"];if(weapon.explRadius!=90||weapon.damageExpl!=35||weapon.speed!=35)throw new Error("Storm not electric ball/burst");
+            b=testBullet(w,"surprise",bx,by);b.damageExpl=100;b.explRadius=30;
+            var last:Object=w.loc.lastObj;b.explosion();var shards:Array=[];obj=last.nobj;while(obj!=null){if(obj is Bullet&&obj.weap==b.weap)shards.push(obj);obj=obj.nobj;}
+            if(shards.length!=8)throw new Error("Wrong shard count "+shards.length);for each(var shard:Object in shards)if(shard.damage!=12||shard.liv!=10||shard.explRadius!=0)throw new Error("Shard values/recursive explosion");
+            last=w.loc.lastObj;b.explosion();if(w.loc.lastObj!=last)throw new Error("Duplicate shrapnel");
+            var gallery:MovieClip=new MovieClip();var row:int=0;
+            for each(key in ["northern_lights","lunar_debt","reverse_rainbow","storm_jar","surprise","good_morning","ash_star","hello_ceiling"]){
+               var c:Class=Pers.projectileClass(key);var visual:MovieClip=new c();visual.x=120;visual.y=20+row*48;gallery.addChild(visual);var label:TextField=new TextField();label.text=w.invent.weapons[key].nazv;label.textColor=0xccffee;label.width=220;label.x=150;label.y=8+row*48;gallery.addChild(label);row++;
+            }
+            snapshot(gallery,"projectile-gallery");
+            trace("PROJECTILE PASS storm ball config, eight nonrecursive short-lived shards, eight distinct visual classes/gallery");
+            // Test both native spell levels, actual mana deduction, target count, collision and allies.
+            w.loc.units=[w.gg];var targets:Array=[];
+            for(i=0;i<5;i++){enemy=flashTarget(w,"raider",bx+70+i*3,by);enemy.maxhp=enemy.hp=10000;enemy.dexter=enemy.dexterPlus=0;targets.push(enemy);}
+            var ally:Object=flashTarget(w,"raider",bx+60,by);ally.fraction=w.gg.fraction;ally.maxhp=ally.hp=10000;
+            w.gg.celX=bx+80;w.gg.celY=by;
+            var spell:Object=w.invent.weapons["multi_lightning"];
+            for(var level:int=0;level<=1;level++){
+               spell.updVariant(level);spell.setPers(w.gg,w.pers);spell.owner.mana=10000;w.pers.manaHP=10000;
+               var mana:Number=spell.owner.mana;var stamina:Number=w.pers.manaHP;
+               spell.t_attack=spell.rapid;spell.t_reload=0;spell.b=null;last=w.loc.lastObj;spell.step();
+               if(spell.b==null)throw new Error("Spell did not fire");
+               if(Math.abs(mana-spell.owner.mana-spell.dmagic)>.001||Math.abs(stamina-w.pers.manaHP-spell.dmana)>.001)throw new Error("Mana deducted more than once");
+               var bolts:Array=[];var selected:Dictionary=new Dictionary();obj=last.nobj;
+               while(obj!=null){if(obj is Bullet&&obj.weap==spell){bolts.push(obj);if(obj.targetObj==null||obj.targetObj==ally||selected[obj.targetObj])throw new Error("Duplicate/friendly target");selected[obj.targetObj]=true;}obj=obj.nobj;}
+               if(bolts.length!=(level==0?3:5))throw new Error("Wrong lightning count "+bolts.length+" level "+level);
+               for each(b in bolts){enemy=b.targetObj;before=enemy.hp;b.precision=0;b.miss=0;b.critCh=0;for(t=0;t<20&&!b.babah;t++)b.step();if(enemy.hp>=before)throw new Error("Lightning fails to hit chosen target");}
+               if(ally.hp!=10000)throw new Error("Spell hit ally");
+            }
+            spell.updVariant(0);spell.setPers(w.gg,w.pers);
+            trace("MULTILIGHTNING PASS native WMagic levels I/II, 3/5 distinct enemy targets, real collisions, friendly exclusion, mana exactly once");
+         } finally {w.loc.units=oldUnits;}
+      }

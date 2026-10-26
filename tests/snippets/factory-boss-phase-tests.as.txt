@@ -1,0 +1,12 @@
+      private function factoryBossPhases(w:World,land:Land,location:Location,x:Number,y:Number):void {
+         for each(var id:String in ["bossraider","ultra"]){
+            var boss:Unit=Unit.create(id,8);boss.putLoc(location,x,y);if(Pers.factoryState(boss)==null)throw new Error("No boss profile "+id);
+            location.units.push(boss);location.summXp+=boss.xp;land.allXp+=boss.xp;
+            var attack:Number=boss.dam*1.37;boss.dam=attack;boss.walkSpeed*=.7;var speed:Number=boss.walkSpeed;
+            boss.currentWeapon=Weapon.create(boss,"p10mm");
+            Pers.factoryRefresh(land,0);factoryCheck(boss.dam,attack*.75/2,"Boss changed phase attack retained on Easy");factoryCheck(boss.walkSpeed,speed,"Boss phase movement retained");
+            if(boss.currentWeapon.id!="p10mm")throw new Error("Boss weapon reverted to initial phase");factoryCheck(boss.currentWeapon.damMult,.75,"New boss phase weapon scaled once");
+            Pers.factoryRefresh(land,4);factoryCheck(boss.dam,attack,"Boss phase attack retained on return to V");factoryCheck(boss.currentWeapon.damMult,2,"New boss phase weapon has V scaling");factoryCheck(boss.walkSpeed,speed,"Boss phase movement not reset on return");
+            trace("FACTORY BOSS PHASE PASS "+id+" changed attack/movement and replacement weapon retained through V-I-V, no elite conversion");
+         }
+      }

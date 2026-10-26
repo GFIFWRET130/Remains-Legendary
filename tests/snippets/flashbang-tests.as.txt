@@ -1,0 +1,48 @@
+      private function flashEffect(unit:Object,id:String):Object {for each(var effect:Object in unit.effects)if(effect.id==id)return effect;return null;}
+      private function flashTarget(w:World,type:String,x:Number,y:Number):Object {
+         var unit:Unit=Unit.create(type,1);if(unit==null)throw new Error("Target creation failed "+type);unit.putLoc(w.loc,x,y+unit.scY*.5);unit.setPos(x,y+unit.scY*.5);w.loc.units.push(unit);return unit;
+      }
+      private function flashbangTests(w:World):void {
+         w.pip.onoff(-1);var stock:int=w.invent.items["flashbang"].kol;if(stock!=6)throw new Error("Expected 6 test flashbangs, got "+stock);
+         if(w.gg.currentWeapon==null||w.gg.currentWeapon.id!="flashbang")w.gg.changeWeapon("flashbang",true);
+         var grenade:Object=w.gg.currentWeapon;if(!(grenade is WThrow))throw new Error("Not native thrown weapon");snapshot(grenade.vis,"flashbang-icon");
+         var bx:Number=w.gg.X;var by:Number=w.gg.Y-w.gg.scY*.5;var clear:Boolean=false;
+         for(var offset:int=-160;offset<=160;offset+=40){var cx:Number=w.gg.X+offset;if(w.loc.getAbsTile(cx,by).phis==0&&w.loc.getAbsTile(cx+80,by).phis==0&&w.loc.isLine(cx,by,cx+80,by)){bx=cx;clear=true;break;}}
+         if(!clear)throw new Error("No clear flashbang test corridor");
+         var near:Object=flashTarget(w,"raider",bx+80,by);var robot:Object=flashTarget(w,"protect",bx+60,by);
+         if(!Pers.flashbangEligible(near))throw new Error("Organic target not eligible");if(Pers.flashbangEligible(robot))throw new Error("Robot not immune");
+         var hp:Number=near.hp;var accuracy:Number=near.precMultCont;
+         w.gg.celX=bx+80;w.gg.celY=by;grenade.t_attack=0;grenade.t_auto=0;grenade.b=null;grenade.attack();grenade.step();
+         var bullet:Object=grenade.b;if(!(bullet is PhisBullet))throw new Error("Native thrown projectile missing");
+         if(w.invent.items["flashbang"].kol!=stock-1)throw new Error("Grenade count consumption failed");
+         bullet.X=bx;bullet.Y=by;bullet.dx=bullet.dy=bullet.ddy=0;bullet.inWater=0;
+         var far:Object=flashTarget(w,"raider",bx+bullet.explRadius+100,by);
+         var before:int=Pers.flashbangDetonations;
+         for(var tick:int=0;tick<grenade.detTime-4;tick++)bullet.step();
+         if(Pers.flashbangDetonations!=before||flashEffect(near,"blindness")!=null)throw new Error("Detonated before fuse");
+         bullet.step();
+         if(Pers.flashbangDetonations!=before+1||!bullet.isExpl)throw new Error("Fuse did not detonate");
+         if(flashEffect(near,"blindness")==null||flashEffect(near,"contusion")==null)throw new Error("No effect on nearby organic enemy");
+         if(flashEffect(near,"blindness").t!=World.fps*5||flashEffect(near,"contusion").t!=World.fps*2)throw new Error("Wrong effect durations");
+         if(near.hp!=hp||near.precMultCont>=accuracy)throw new Error("Wrong damage or accuracy change");
+         if(flashEffect(robot,"blindness")!=null||flashEffect(far,"blindness")!=null)throw new Error("Immunity/range failed");
+         bullet.explosion();if(Pers.flashbangDetonations!=before+1)throw new Error("Double explosion");
+         trace("FLASHBANG PASS native throw, one count consumed, fuse, single detonation, nearby enemy accuracy reduced, 5s/2s, no HP damage, robot immunity, range");
+         stageSnapshot(w,"flashbang-effect");
+         for(tick=0;tick<World.fps*5+1;tick++){var effects:Array=near.effects.concat();for each(var effect:Object in effects)effect.step();}
+         if(flashEffect(near,"blindness")!=null||flashEffect(near,"contusion")!=null||Math.abs(near.precMultCont-accuracy)>.001)throw new Error("Effects did not expire/restore accuracy");
+         var tile:Object=w.loc.getAbsTile(bx+40,by);var previous:Object={phis:tile.phis,x1:tile.phX1,x2:tile.phX2,y1:tile.phY1,y2:tile.phY2};
+         tile.phis=1;tile.phX1=bx+25;tile.phX2=bx+55;tile.phY1=by-30;tile.phY2=by+30;
+         try {if(w.loc.isLine(bx,by,near.X,near.Y-near.scY*.5))throw new Error("Test wall not blocking");var blocked:Bullet=new Bullet(w.gg,bx,by,null);blocked.weap=grenade;blocked.explRadius=bullet.explRadius;blocked.explosion();if(flashEffect(near,"blindness")!=null)throw new Error("Flash passed through wall");}
+         finally {tile.phis=previous.phis;tile.phX1=previous.x1;tile.phX2=previous.x2;tile.phY1=previous.y1;tile.phY2=previous.y2;}
+         if(!w.loc.isLine(bx,by,near.X,near.Y-near.scY*.5))throw new Error("Test wall restoration failed");
+         var restoredHp:Number=w.gg.hp;w.gg.invulner=false;w.gg.remEffect("blindness");w.gg.remEffect("contusion");
+         var own:Bullet=new Bullet(w.gg,w.gg.X,w.gg.Y-w.gg.scY*.5,null);own.weap=grenade;own.explRadius=260;own.explosion();
+         if(flashEffect(w.gg,"blindness")==null||w.gg.hp!=restoredHp)throw new Error("Player flash risk failed");w.gg.remEffect("blindness");w.gg.remEffect("contusion");
+         var saved:Object=w.invent.save();var bytes:ByteArray=new ByteArray();bytes.writeObject(saved);bytes.position=0;var copy:Object=bytes.readObject();var loaded:Invent=new Invent(w.gg,copy);
+         if(loaded.weapons["flashbang"]==null||loaded.items["flashbang"].kol!=stock-1)throw new Error("Flashbang save/refill error");
+         delete copy.weapons["flashbang"];delete copy.items["flashbang"];var migrated:Invent=new Invent(w.gg,copy);if(migrated.items["flashbang"].kol!=6)throw new Error("Old-save flashbang grant failed");
+         trace("FLASHBANG PASS effect expiry/restored accuracy, native wall cover, player risk without HP loss, saved count/no refill, old-save grant");
+         var standard:Bullet=new Bullet(w.gg,bx,by,null);standard.weap=w.invent.weapons["hello_ceiling"];before=Pers.flashbangDetonations;standard.explRadius=40;standard.damageExpl=1;standard.explosion();if(Pers.flashbangDetonations!=before)throw new Error("Intercepted another explosive");
+         trace("FLASHBANG PASS other explosives keep native explosion path");
+      }

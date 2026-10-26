@@ -1,0 +1,13 @@
+            var tile:Object=w.loc.getAbsTile(bx+35,by);var previous:Object={phis:tile.phis,x1:tile.phX1,x2:tile.phX2,y1:tile.phY1,y2:tile.phY2};
+            var health:Array=[];for each(enemy in targets)health.push(enemy.hp);
+            tile.phis=1;tile.phX1=bx+25;tile.phX2=bx+45;tile.phY1=by-30;tile.phY2=by+30;
+            try {
+               if(w.loc.isLine(bx,by,bx+80,by))throw new Error("Lightning wall not blocking LOS");
+               w.gg.magicX=bx;w.gg.magicY=by;if(spell.vis.parent!=null)spell.vis.parent.removeChild(spell.vis);
+               spell.rot=0;spell.deviation=0;spell.t_attack=spell.rapid;spell.b=null;last=w.loc.lastObj;spell.step();
+               count=0;obj=last.nobj;while(obj!=null){if(obj is Bullet&&obj.weap==spell){count++;if(obj.targetObj!=null)throw new Error("Selected target through wall");}obj=obj.nobj;}
+               if(count!=1)throw new Error("Extra lightning through wall");
+               spell.b.destroy=0;for(t=0;t<5&&!spell.b.babah;t++)spell.b.step();
+               for(i=0;i<targets.length;i++)if(targets[i].hp!=health[i])throw new Error("Lightning damaged enemy behind wall");
+            } finally {tile.phis=previous.phis;tile.phX1=previous.x1;tile.phX2=previous.x2;tile.phY1=previous.y1;tile.phY2=previous.y2;}
+            trace("MULTILIGHTNING PASS wall prevents target acquisition and damage; native untargeted shot remains");

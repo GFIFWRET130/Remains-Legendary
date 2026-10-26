@@ -1,0 +1,53 @@
+      private var factoryReentryLand:Land;
+      private var factoryKilled:Unit;
+      private function factoryPopupTests(w:World):void {
+         w.hardInv=false;w.pers.invMassParam();w.pers.headHP=w.pers.torsHP=w.pers.legsHP=w.pers.bloodHP=100;
+         var current:String=w.game.curLandId;var mission:String=w.game.missionId;var creation:Boolean=w.game.crea;var paused:Boolean=w.onPause;
+         var inventory:Object=w.invent;w.game.triggers["legendary_test_progress"]=7;
+         for(var mode:int=0;mode<5;mode++){
+            w.game.beginMission("random_plant");var state:Object=Pers.factoryChoiceState();if(!state.open||state.kind!="begin")throw new Error("Map mission did not open chooser mode="+mode+" before="+current+" now="+w.game.curLandId+" allStat="+w.allStat+" dopusk="+w.pers.dopusk()+" speed="+w.pers.speedShtr+" state="+JSON.stringify(state));
+            if(w.game.curLandId!=current||w.game.missionId!=mission||w.game.crea!=creation)throw new Error("Travel mutated game before confirmation");
+            var root:Object=w.main.getChildByName("legendary_factory_difficulty");press(named(root,"factory_mode_"+mode));
+            if(Pers.factoryChoiceState().mode!=mode)throw new Error("Difficulty row not selectable "+mode);
+            if(mode==4)snapshot(root,"factory-choice");
+            press(named(root,"factory_cancel"));if(Pers.factoryChoiceState().open||w.onPause!=paused||w.game.curLandId!=current||w.game.crea!=creation)throw new Error("Cancel changed game or left pause");
+         }
+         w.game.gotoLand("random_plant","1:2",true);if(!Pers.factoryChoiceState().open||Pers.factoryChoiceState().kind!="travel")throw new Error("Direct return bypasses chooser");
+         w.swfStage.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_DOWN,true,false,0,27));if(Pers.factoryChoiceState().open||w.game.curLandId!=current)throw new Error("Esc did not cancel");
+         if(w.invent!=inventory||w.game.triggers["legendary_test_progress"]!=7||w.game.globalDif!=2)throw new Error("Choice reset progress or global difficulty");
+         trace("FACTORY CHOOSER PASS native map beginMission + gotoLand interception, all five reachable mouse choices, preview, cancel/Esc, pause restored, no mission mutation before confirmation");
+      }
+      private function factoryStartEntry(w:World):void {
+         w.pip.onoff(-1);w.gg.invulner=true;w.game.curLandId="rbl";w.land=factoryTestBase;w.onPause=true;
+         w.game.beginMission("random_plant");var root:Object=w.main.getChildByName("legendary_factory_difficulty");if(root==null)throw new Error("Entry chooser missing");
+         press(named(root,"factory_mode_4"));press(named(root,"factory_confirm"));
+         if(Pers.factoryChoiceState().open||w.game.curLandId!="random_plant"||w.t_exit<=0||Pers.factorySelected()!=4)throw new Error("Confirm did not start native travel");
+         w.onPause=false;
+      }
+      private function factoryArrived(w:World):void {
+         w.onPause=true;
+         if(w.land.act.id!="random_plant"||Pers.factoryActive(w.land)!=4)throw new Error("Accepted mode not applied to actual Factory");
+         factoryReentryLand=w.land;var live:Array=[];
+         for each(var loc:Location in Pers.factoryLocations(w.land))for each(var unit:Unit in loc.units)if(Pers.factoryState(unit)!=null&&unit.sost==1&&!unit.boss)live.push(unit);
+         if(live.length<2)throw new Error("Not enough actual enemies for return test");
+         var wounded:Unit=live[0];wounded.hp=wounded.maxhp*.4;factoryKilled=live[1];factoryKilled.sost=4;factoryKilled.hp=0;factoryKilled.xp=0;
+         Pers.factoryRefresh(w.land,0);factoryCheck(wounded.hp/wounded.maxhp,.4,"Changing difficulty does not heal wounded enemy");
+         if(factoryKilled.sost!=4||factoryKilled.hp!=0||factoryKilled.xp!=0)throw new Error("Refresh resurrected killed enemy");
+         Pers.factoryRefresh(w.land,4);factoryCheck(wounded.hp/wounded.maxhp,.4,"Changing back does not heal wounded enemy");
+         stageSnapshot(w,"factory-highest-mode");w.game.gotoLand("rbl");if(Pers.factoryChoiceState().open)throw new Error("Other location got chooser");w.onPause=false;
+      }
+      private function factoryReturn(w:World):void {
+         w.onPause=true;w.game.gotoLand("random_plant");var root:Object=w.main.getChildByName("legendary_factory_difficulty");if(root==null)throw new Error("Second entry has no chooser state="+JSON.stringify(Pers.factoryChoiceState())+" carry="+w.pers.speedShtr+" health="+w.pers.headHP+","+w.pers.torsHP+","+w.pers.legsHP+","+w.pers.bloodHP+" land="+w.game.curLandId+" status="+w.allStat);
+         press(named(root,"factory_mode_0"));press(named(root,"factory_confirm"));
+         if(Pers.factorySelected()!=0||Pers.factoryActive(factoryReentryLand)!=0)throw new Error("Cannot freely change V to I on return");
+         if(factoryKilled.sost!=4||factoryKilled.hp!=0)throw new Error("Return resurrected killed enemy");
+         w.onPause=false;
+      }
+      private function factoryReentered(w:World):void {
+         w.onPause=true;if(w.land!=factoryReentryLand||Pers.factoryActive(w.land)!=0)throw new Error("Return reset cached Factory instead of applying choice");
+         if(factoryKilled.sost!=4||factoryKilled.hp!=0)throw new Error("Killed enemy revived on reentry");
+         if(w.game.triggers["legendary_test_progress"]!=7||w.game.globalDif!=2)throw new Error("Travel reset progress/global difficulty");
+         for each(var loc:Location in Pers.factoryLocations(w.land))for each(var unit:Unit in loc.units){var state:Object=Pers.factoryState(unit);if(state!=null&&unit.sost<3){factoryCheck(state.mode,0,"Returned enemies updated to Easy");factoryCheck(unit.maxhp,state.original.hp*.75,"Extra elite reverted on Easy");}}
+         w.pip.onoff(5,3);snapshot(w.vpip,"factory-settings");
+         trace("FACTORY REENTRY PASS actual map-confirm travel V, return to base, second chooser + travel I, same cached Land, no dead enemy revival, original HP baseline restored, progress/global difficulty preserved; assertions="+factoryTestCount);
+      }
