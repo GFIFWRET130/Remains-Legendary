@@ -1,0 +1,1683 @@
+diff --git a/fe/unit/Pers.as b/fe/unit/Pers.as
+index 6d47285..3b7ea00 100644
+--- a/fe/unit/Pers.as
++++ b/fe/unit/Pers.as
+@@ -1,6 +1,26 @@
+ package fe.unit
+ {
+    import fe.*;
++   import flash.display.DisplayObjectContainer;
++   import flash.display.Bitmap;
++   import flash.display.Loader;
++   import flash.display.Sprite;
++   import flash.display.Graphics;
++   import flash.events.Event;
++   import flash.events.IOErrorEvent;
++   import flash.net.URLRequest;
++   import flash.geom.ColorTransform;
++   import flash.geom.Rectangle;
++   import flash.text.TextField;
++   import flash.text.TextFormat;
++   import flash.utils.getQualifiedClassName;
++   import fe.graph.Emitter;
++   import fe.loc.Location;
++   import flash.events.KeyboardEvent;
++   import flash.events.MouseEvent;
++   import fe.weapon.Bullet;
++   import flash.utils.Dictionary;
++   import fe.inter.Appear;
+    import fe.loc.CheckPoint;
+    import fe.serv.LootGen;
+    import flash.display.MovieClip;
+@@ -8,7 +28,7 @@ package fe.unit
+    public dynamic class Pers
+    {
+       
+-      public static var maxSkLvl:int = 20;
++      public static var maxSkLvl:int = 25;
+       
+       public static var maxPostSkLvl:int = 100;
+       
+@@ -510,6 +530,7 @@ package fe.unit
+          this.weaponSkills = [1,1,1,1,1,1,1,1];
+          this.postSkTab = [5,11,18,26,35,45,56,68,82,100];
+          super();
++         legendaryData();
+          this.skill_ids = new Array();
+          this.skills = new Array();
+          this.addictions = new Array();
+@@ -870,6 +891,8 @@ package fe.unit
+          this.maxm1 = 40;
+          this.maxm2 = 1000;
+          this.maxm3 = 500;
++         this.hackAtt = 3;
++         this.lockPickTime = 30;
+          this.gg.radX = 1;
+          this.gg.dexter = 1;
+          this.gg.dodgePlus = 0;
+@@ -994,31 +1017,33 @@ package fe.unit
+       
+       public function getSkLevel(param1:int) : int
+       {
++         if(param1 > 20) return 5 + Math.min(5,param1 - 20) + this.rankEquipmentBonus();
+          if(param1 >= 20)
+          {
+-            return 5;
++            return 5 + this.rankEquipmentBonus();
+          }
+          if(param1 >= 14)
+          {
+-            return 4;
++            return 4 + this.rankEquipmentBonus();
+          }
+          if(param1 >= 9)
+          {
+-            return 3;
++            return 3 + this.rankEquipmentBonus();
+          }
+          if(param1 >= 5)
+          {
+-            return 2;
++            return 2 + this.rankEquipmentBonus();
+          }
+          if(param1 >= 2)
+          {
+-            return 1;
++            return 1 + this.rankEquipmentBonus();
+          }
+-         return 0;
++         return 0 + this.rankEquipmentBonus();
+       }
+       
+       public function getSkBonus(param1:int) : int
+       {
++         if(param1 > 20 && param1 <= 25) return param1 - 15;
+          if(param1 == 20)
+          {
+             return 5;
+@@ -1042,6 +1067,834 @@ package fe.unit
+          return 0;
+       }
+       
++      public static function legendaryRanks(raw:int) : int
++      {
++         return Math.max(0,Math.min(6,raw - 20));
++      }
++
++      public function legendaryWeaponMultiplier(skill:int) : Number
++      {
++         var ids:Array = ["","melee","smallguns","repair","energy","explosives","magic","tele"];
++         if(skill < 1 || skill > 7) return 1;
++         return 1 + 0.15 * Math.max(0,this.getWeapLevel(skill)-5);
++      }
++
++      public function legendaryParameters() : void
++      {
++         var teleRanks:int = Math.max(0,this.getSkillLevel("tele")-5);
++         if(teleRanks > 0) this.teleMult = 0.2 * Math.pow(0.9,teleRanks);
++         this.healMult *= 1 + 0.15 * Math.max(0,this.getSkillLevel("medic")-5);
++         this.repairMult *= 1 + 0.20 * Math.max(0,this.getSkillLevel("repair")-5);
++         this.lockPickTime = Math.max(6,Math.round(this.lockPickTime / (1 + 0.30 * Math.max(0,this.getSkillLevel("lockpick")-5)))) ;
++         this.hackAtt += Math.max(0,this.getSkillLevel("science")-5);
++         this.recManaMin += 0.5 * Math.max(0,this.getSkillLevel("magic")-5);
++         this.visiMult *= Math.pow(0.9,Math.max(0,this.getSkillLevel("sneak")-5));
++         this.barterMult *= Math.pow(0.9,Math.max(0,this.getSkillLevel("barter")-5));
++         this.gg.allVulnerMult *= Math.pow(0.94,Math.max(0,this.getSkillLevel("survival")-5));
++      }
++
++      public static function legendaryInfo(id:String, raw:int) : String
++      {
++         if(raw < 20) return "";
++         var n:int = legendaryRanks(raw);
++         var show:int = n > 0 ? n : 1;
++         var s:String = "<font color='#FFD166'>ЛЕГЕНДАРНЫЕ БОНУСЫ" + (n > 0 ? " — ранг " + (5 + n) : " — следующий ранг 6") + "</font><br>";
++         if(id == "melee" || id == "smallguns" || id == "repair" || id == "energy" || id == "explosives" || id == "magic" || id == "tele")
++         {
++            s += "Доп. урон оружия этого навыка: +" + (15 * show) + "% (по +15% за ранг).<br>";
++         }
++         if(id == "tele") s += "Поднимаемая масса: " + (25 + 13 * show) + " вместо 25 на ранге 5.<br>";
++         if(id == "melee") s += "Дальность удара: " + (250 + 30 * show) + " вместо 250 на ранге 5.<br>";
++         if(id == "magic") s += "Доп. восстановление маны: +" + (0.5 * show) + ".<br>";
++         if(id == "repair") s += "Доп. эффективность ремонта: +" + (20 * show) + "%.<br>";
++         if(id == "medic") s += "Здоровье от навыка: +" + (200 + 60 * show) + " вместо +200.<br>Доп. эффективность лечения: +" + (15 * show) + "%.<br>";
++         if(id == "lockpick") s += "Время взлома: меньше на " + Math.round(100 - 100 / (1 + 0.30 * show)) + "% (+30% к скорости за ранг).<br>";
++         if(id == "science") s += "Доп. попытки взлома терминала: +" + show + " (по +1 за ранг).<br>";
++         if(id == "sneak") s += "Доп. снижение заметности: " + Math.round(100 * (1 - Math.pow(0.9,show))) + "% (x0.9 за ранг).<br>";
++         if(id == "barter") s += "Доп. снижение торгового множителя: " + Math.round(100 * (1 - Math.pow(0.9,show))) + "% (x0.9 за ранг).<br>";
++         if(id == "survival") s += "Доп. снижение входящего урона: " + Math.round(100 * (1 - Math.pow(0.94,show))) + "% (x0.94 за ранг).<br>Броня от навыка: " + (5 + show) + " вместо 5.<br>";
++         s += "Стоимость рангов 6–10: 2 / 2 / 3 / 3 / 4 очка.<br>";
++         if(n < 5) s += "Следующее повышение: " + legendaryCost(id,raw + 1) + " очк.<br>";
++         s += "<font color='#AAAAAA'>Предпросмотр. Бонусы применяются после принятия.</font><br><br>";
++         return s;
++      }
++
++      public static const legendaryVersion:String = "0.4.8";
++      public static function legendaryMenuVersion(menu:Object):void {
++         if(menu==null||menu.version==null)return;
++         menu.version.htmlText="<b>"+Res.guiText("version")+" Legendary "+legendaryVersion+"</b>";
++         menu.version.width=270;menu.version.height=30;menu.version.mouseEnabled=false;
++         if(World.w!=null&&World.w.swfStage!=null){
++            var stageObject:Object=World.w.swfStage;
++            try{var window:Object=stageObject.nativeWindow;if(window!=null)window.title="Remains Legendary "+legendaryVersion;}catch(error:Error){}
++         }
++      }
++
++      private static var factoryPending:Object;
++      private static var factoryBypass:Boolean=false;
++      public static function factoryChoiceState():Object {return factoryPending==null?{open:false}:{open:true,mode:factoryPending.mode,kind:factoryPending.kind};}
++      public static function factoryBegin(id:String):Boolean {
++         var w:Object=World.w;
++         if(factoryBypass||w==null||w.game==null||id!="random_plant"||w.game.curLandId==id||(w.allStat<1||w.allStat>2))return true;
++         if(!w.pers.dopusk()||w.pers.speedShtr>=3)return true;
++         factoryOpen({game:w.game,id:id,coord:null,flag:false,kind:"begin"});return false;
++      }
++      public static function factoryTravel(game:Object,id:String,coord:String,flag:Boolean):Boolean {
++         var w:Object=World.w;
++         if(factoryBypass||w==null||id!="random_plant"||(w.allStat<1||w.allStat>2))return true;
++         if(!w.pers.dopusk()||w.pers.speedShtr>=3)return true;
++         if(game.curLandId==id&&w.land!=null&&w.land.act.id==id)return true;
++         factoryOpen({game:game,id:id,coord:coord,flag:flag,kind:"travel"});return false;
++      }
++      private static function factoryText(parent:Sprite,text:String,x:Number,y:Number,width:Number,height:Number,size:int=18):TextField {
++         var field:TextField=new TextField();field.defaultTextFormat=new TextFormat("Arial",size,0x99ffdd);field.wordWrap=true;field.selectable=false;field.mouseEnabled=false;
++         field.x=x;field.y=y;field.width=width;field.height=height;field.text=text;parent.addChild(field);return field;
++      }
++      private static function factoryButton(parent:Sprite,id:String,label:String,x:Number,y:Number,width:Number):Sprite {
++         var button:Sprite=new Sprite();button.name=id;button.x=x;button.y=y;button.buttonMode=true;
++         button.graphics.lineStyle(1,0x44ddaa);button.graphics.beginFill(0x102d27);button.graphics.drawRoundRect(0,0,width,36,8);button.graphics.endFill();
++         factoryText(button,label,12,5,width-20,28,17);button.addEventListener(MouseEvent.MOUSE_DOWN,factoryClick);parent.addChild(button);return button;
++      }
++      private static function factoryOpen(request:Object):void {
++         if(factoryPending!=null)return;
++         var w:Object=World.w;request.pause=w.onPause;request.mode=factorySelected();request.buttons=[];
++         var root:Sprite=new Sprite();root.name="legendary_factory_difficulty";request.root=root;
++         var panel:Sprite=new Sprite();panel.name="factory_panel";request.panel=panel;root.addChild(panel);
++         panel.graphics.lineStyle(2,0x55eebb);panel.graphics.beginFill(0x081b17,.98);panel.graphics.drawRoundRect(0,0,620,516,18);panel.graphics.endFill();
++         factoryText(panel,"Завод — выберите сложность",24,16,574,38,25);
++         factoryText(panel,"Все пять режимов доступны при каждом входе",24,56,574,28,16);
++         var roman:Array=["I","II","III","IV","V"];
++         for(var i:int=0;i<5;i++)request.buttons.push(factoryButton(panel,"factory_mode_"+i,roman[i]+".  "+factoryNames[i],24,94+i*42,572));
++         request.info=factoryText(panel,"",24,312,572,116,16);
++         factoryButton(panel,"factory_confirm","Войти на Завод",24,448,276);
++         factoryButton(panel,"factory_cancel","Отмена",320,448,276);
++         root.addEventListener(MouseEvent.MOUSE_DOWN,factoryStop);root.addEventListener(MouseEvent.MOUSE_UP,factoryStop);root.addEventListener(MouseEvent.MOUSE_WHEEL,factoryStop);
++         factoryPending=request;w.onPause=true;w.ctr.clearAll();w.main.addChild(root);
++         w.swfStage.addEventListener(KeyboardEvent.KEY_DOWN,factoryKey,true,10000);w.swfStage.addEventListener(KeyboardEvent.KEY_DOWN,factoryKey,false,10000);
++         w.swfStage.addEventListener(KeyboardEvent.KEY_UP,factoryKey,true,10000);w.swfStage.addEventListener(KeyboardEvent.KEY_UP,factoryKey,false,10000);
++         w.swfStage.addEventListener(Event.RESIZE,factoryResize);factoryResize();factoryPaint();
++      }
++      private static function factoryStop(event:MouseEvent):void {event.stopImmediatePropagation();}
++      private static function factoryKey(event:KeyboardEvent):void {
++         if(factoryPending==null)return;event.stopImmediatePropagation();World.w.ctr.clearAll();
++         if(event.type==KeyboardEvent.KEY_DOWN&&event.keyCode==27)factoryClose(false);
++      }
++      private static function factoryResize(event:Event=null):void {
++         if(factoryPending==null)return;var w:Object=World.w;var root:Sprite=factoryPending.root;var panel:Sprite=factoryPending.panel;
++         root.graphics.clear();root.graphics.beginFill(0,.82);root.graphics.drawRect(0,0,w.swfStage.stageWidth,w.swfStage.stageHeight);root.graphics.endFill();
++         var scale:Number=Math.min(1,(w.swfStage.stageWidth-24)/620,(w.swfStage.stageHeight-24)/516);panel.scaleX=panel.scaleY=scale;
++         panel.x=(w.swfStage.stageWidth-620*scale)*.5;panel.y=(w.swfStage.stageHeight-516*scale)*.5;
++      }
++      private static function factoryPaint():void {
++         if(factoryPending==null)return;var chosen:int=factoryPending.mode;var p:Object=factoryProfile(chosen);
++         for(var i:int=0;i<5;i++){var button:Sprite=factoryPending.buttons[i];button.graphics.clear();button.graphics.lineStyle(i==chosen?2:1,i==chosen?0xffd166:0x44ddaa);button.graphics.beginFill(i==chosen?0x34513a:0x102d27);button.graphics.drawRoundRect(0,0,572,36,8);button.graphics.endFill();}
++         var descriptions:Array=["Для спокойного прохождения и исследования.","Обычная сложность столкновений.","Более опасные противники и серьёзные столкновения.","Очень опасные бои для подготовленных персонажей.","Максимальное испытание для хорошо экипированных игроков."];
++         factoryPending.info.text=descriptions[chosen]+"\nHP врагов ×"+p.hp+"  •  Урон ×"+p.damage+"  •  Опыт ×"+p.xp+"\nДополнительная элита: "+Math.round(p.elite*100)+"%. Баланс тестовый.\nВыбор действует на этот заход. Задания и предметы сохраняются.";
++      }
++      private static function factoryClick(event:MouseEvent):void {
++         event.stopImmediatePropagation();if(factoryPending==null)return;
++         var id:String=event.currentTarget.name;
++         if(id.indexOf("factory_mode_")==0){factoryPending.mode=int(id.substr(13));factoryPaint();return;}
++         factoryClose(id=="factory_confirm");
++      }
++      public static function factoryClose(accept:Boolean):void {
++         if(factoryPending==null)return;var request:Object=factoryPending;factoryPending=null;var w:Object=World.w;
++         w.swfStage.removeEventListener(KeyboardEvent.KEY_DOWN,factoryKey,true);w.swfStage.removeEventListener(KeyboardEvent.KEY_DOWN,factoryKey,false);
++         w.swfStage.removeEventListener(KeyboardEvent.KEY_UP,factoryKey,true);w.swfStage.removeEventListener(KeyboardEvent.KEY_UP,factoryKey,false);w.swfStage.removeEventListener(Event.RESIZE,factoryResize);
++         if(request.root.parent!=null)request.root.parent.removeChild(request.root);w.onPause=request.pause;w.ctr.clearAll();
++         if(!accept||w.game!=request.game)return;
++         w.game.triggers["legendary_factory_mode"]=request.mode+1;
++         factoryBypass=true;
++         try {
++            if(request.kind=="begin")request.game.beginMission(request.id);
++            else {var act:Object=request.game.lands[request.id];if(!request.game.crea&&act!=null&&act.land!=null)factoryRefresh(act.land,request.mode);request.game.gotoLand(request.id,request.coord,request.flag);}
++         } finally {factoryBypass=false;}
++      }
++
++      private static var factoryLands:Dictionary=new Dictionary(true);
++      private static var factoryUnits:Dictionary=new Dictionary(true);
++      public static var factoryNames:Array=["Простая","Средняя","Сложная","Экстрим","А ты выживешь?"];
++      public static function factoryProfile(mode:int):Object {
++         mode=Math.max(0,Math.min(4,mode));
++         return {mode:mode,name:factoryNames[mode],hp:[.75,1,1.5,2,3][mode],damage:[.75,1,1.25,1.5,2][mode],xp:[1,1,1.25,1.5,2][mode],elite:[0,0,.08,.16,.25][mode]};
++      }
++      public static function factorySelected():int {
++         if(World.w==null||World.w.game==null||World.w.game.triggers==null)return 1;
++         var saved:int=int(World.w.game.triggers["legendary_factory_mode"]);
++         return saved>=1&&saved<=5?saved-1:1;
++      }
++      public static function factoryChoose(mode:int):Boolean {
++         if(mode<0||mode>4||World.w==null||World.w.game==null)return false;
++         if(World.w.land!=null&&World.w.land.act!=null&&World.w.land.act.id=="random_plant")return false;
++         World.w.game.triggers["legendary_factory_mode"]=mode+1;
++         return true;
++      }
++      public static function factoryDescription():String {
++         var p:Object=factoryProfile(factorySelected());
++         var active:int=World.w==null?-1:factoryActive(World.w.land);
++         return (active<0?"":"<b>Текущий поход: "+factoryNames[active]+"</b><br>")+"Перед каждым входом на Завод открывается выбор всех пяти сложностей. Последний выбор запоминается, но не блокирует остальные варианты.<br><br>Средняя соответствует прежнему балансу. Остальные локации и глобальная сложность не меняются. При повторном входе здоровье живых врагов пересчитывается с сохранением доли оставшегося HP, погибшие не оживают. Квесты и предметы не сбрасываются сменой режима. Бонус награды пока касается опыта, содержимое контейнеров не менялось. Числовой баланс предварительный.";
++      }
++      public static function factorySettingLabel():String {
++         var active:int=World.w==null?-1:factoryActive(World.w.land);
++         return active<0?"Завод: выбор сложности перед входом":"Завод: "+factoryNames[active]+" (текущий поход)";
++      }
++      public static function factoryLandStart(land:Object):void {
++         if(land==null||land.act==null||land.act.id!="random_plant"||factoryLands[land]!=null)return;
++         factoryLands[land]=factorySelected();
++      }
++      public static function factoryActive(land:Object):int {
++         if(land==null||land.act==null||land.act.id!="random_plant")return -1;
++         if(factoryLands[land]==null)factoryLandStart(land);
++         return int(factoryLands[land]);
++      }
++      public static function factoryEntered(land:Object):void {
++         var mode:int=factoryActive(land);if(mode<0||World.w==null||World.w.gui==null)return;
++         World.w.gui.infoText("skill","Завод — "+factoryNames[mode]);
++      }
++      public static function factoryEliteType(mode:int,roll:Number):int {
++         var chance:Number=factoryProfile(mode).elite;
++         if(chance<=0||roll<0||roll>=chance)return 0;
++         return 2+Math.min(2,int(roll/chance*3));
++      }
++      public static function factoryRoll(unit:Object):Number {
++         var key:String=unit.loc.id+":"+unit.id+":"+Math.round(unit.X)+":"+Math.round(unit.Y)+":"+unit.loc.land.act.landStage;
++         var hash:uint=2166136261;
++         for(var i:int=0;i<key.length;i++)hash=uint(hash*31+key.charCodeAt(i));
++         return Number(hash%10000)/10000;
++      }
++      public static function factoryUnit(unit:Object):void {
++         if(unit==null||unit.player||unit.loc==null||unit.loc.land==null||unit.fraction==0||unit.fraction==100||unit.sost>=3||unit.invulner||factoryUnits[unit]!=null)return;
++         var mode:int=factoryActive(unit.loc.land);if(mode<0)return;
++         var original:Object={hp:unit.maxhp,damage:unit.dam,xp:unit.xp,hero:unit.hero,name:unit.nazv,walk:unit.walkSpeed,sit:unit.sitSpeed,run:unit.runSpeed,observ:unit.observ,color:unit.cTransform,weapon:unit.currentWeapon==null?0:unit.currentWeapon.damage,weaponExpl:unit.currentWeapon==null?0:unit.currentWeapon.damageExpl,weaponMult:unit.currentWeapon==null?1:unit.currentWeapon.damMult};
++         var base:Object={mode:-1,original:original,roll:factoryRoll(unit)};
++         factoryUnits[unit]=base;
++         factoryApply(unit,mode,true);
++      }
++      public static function factoryState(unit:Object):Object {return factoryUnits[unit];}
++      private static function factoryApply(unit:Object,mode:int,initial:Boolean=false):void {
++         var s:Object=factoryUnits[unit];if(s==null||s.mode==mode||unit.sost>=3)return;
++         // Boss phases can replace weapons and change movement/attack values. Scale their
++         // current phase by a ratio instead of restoring the initial phase snapshot.
++         if(!initial&&unit.boss){
++            var old:Object=factoryProfile(s.mode);var next:Object=factoryProfile(mode);
++            unit.maxhp*=next.hp/old.hp;unit.hp*=next.hp/old.hp;unit.dam*=next.damage/old.damage;
++            if(unit.currentWeapon!=null){
++               var same:Boolean=unit.currentWeapon.id==s.weaponID;var multiplier:Number=next.damage/(same?old.damage:1);
++               if(unit.currentWeapon.tip<=1){unit.currentWeapon.damage*=multiplier;unit.currentWeapon.damageExpl*=multiplier;}else unit.currentWeapon.damMult*=multiplier;
++            }
++            if(unit.xp>0)unit.xp=Math.round(s.xp*next.xp);s.mode=mode;s.hp=unit.maxhp/next.hp;s.damage=unit.dam/next.damage;s.weaponID=unit.currentWeapon==null?"":unit.currentWeapon.id;
++            return;
++         }
++         var o:Object=s.original;var ratio:Number=unit.maxhp>0?Math.max(0,Math.min(1,unit.hp/unit.maxhp)):1;
++         var reward:Boolean=initial||unit.xp>0;var p:Object=factoryProfile(mode);
++         unit.maxhp=unit.hp=o.hp;unit.dam=o.damage;unit.xp=o.xp;unit.hero=o.hero;unit.nazv=o.name;
++         unit.walkSpeed=o.walk;unit.sitSpeed=o.sit;unit.runSpeed=o.run;unit.observ=o.observ;unit.cTransform=o.color;
++         if(unit.currentWeapon!=null){unit.currentWeapon.damage=o.weapon;unit.currentWeapon.damageExpl=o.weaponExpl;unit.currentWeapon.damMult=o.weaponMult;}
++         var elite:int=unit.hero==0&&unit.mHero&&!unit.boss?factoryEliteType(mode,s.roll):0;
++         if(elite>0){unit.setHero(elite);unit.cTransform=Unit.heroTransforms[elite-1];}
++         if(elite>0||int(s.elite)>0)unit.setEffParams();if(unit.vis!=null&&unit.cTransform!=null)unit.vis.transform.colorTransform=unit.cTransform;
++         s.mode=mode;s.elite=elite;s.hp=unit.maxhp;s.damage=unit.dam;s.xp=unit.xp;s.weapon=unit.currentWeapon==null?0:unit.currentWeapon.damage;s.weaponMult=unit.currentWeapon==null?1:unit.currentWeapon.damMult;s.weaponID=unit.currentWeapon==null?"":unit.currentWeapon.id;
++         unit.maxhp*=p.hp;unit.hp=unit.maxhp*ratio;unit.dam*=p.damage;
++         if(unit.currentWeapon!=null){if(unit.currentWeapon.tip<=1){unit.currentWeapon.damage*=p.damage;unit.currentWeapon.damageExpl*=p.damage;}else unit.currentWeapon.damMult*=p.damage;}
++         unit.xp=reward?Math.round(unit.xp*p.xp):0;
++      }
++      private static function factoryCollect(value:Object,result:Array,seen:Dictionary):void {
++         if(value==null||seen[value])return;seen[value]=true;
++         if(value is Location){result.push(value);return;}
++         if(value is Array)for each(var child:Object in value)factoryCollect(child,result,seen);
++      }
++      public static function factoryLocations(land:Object):Array {
++         var list:Array=[];var seen:Dictionary=new Dictionary(true);factoryCollect(land.locs,list,seen);factoryCollect(land.probs,list,seen);factoryCollect(land.listLocs,list,seen);return list;
++      }
++      public static function factoryRefresh(land:Object,mode:int):void {
++         if(land==null||land.act.id!="random_plant")return;
++         factoryLands[land]=mode;var delta:int=0;
++         for each(var loc:Object in factoryLocations(land))for each(var unit:Object in loc.units){
++            if(factoryUnits[unit]==null||unit.sost>=3)continue;
++            var xp:int=unit.xp;factoryApply(unit,mode);var change:int=unit.xp-xp;
++            loc.summXp+=change;delta+=change;
++         }
++         land.allXp+=delta;
++      }
++
++      // Weak keys prevent transient projectiles and enemies from retaining a level in memory.
++      private static var projectileState:Dictionary=new Dictionary(true);
++      private static var projectileHits:Dictionary=new Dictionary(true);
++      public static var rainbowColor:int=0;
++      public static var projectileIds:Array=["northern_lights","lunar_debt","reverse_rainbow","storm_jar","surprise","good_morning","ash_star","hello_ceiling","multi_lightning"];
++      public static function projectileClass(id:String):Class {
++         if(id=="northern_lights")return AuroraShot;
++         if(id=="lunar_debt")return LunarShot;
++         if(id=="reverse_rainbow")return RainbowShot;
++         if(id=="storm_jar")return StormShot;
++         if(id=="surprise")return SurpriseShot;
++         if(id=="good_morning")return SonicShot;
++         if(id=="ash_star")return AshShot;
++         if(id=="hello_ceiling")return CeilingRocket;
++         return null;
++      }
++      public static function projectileData():void {
++         for(var stack:int=1;stack<=3;stack++)if(legendaryFind(AllData.d.eff,"legendary_chill"+stack)==null){
++            var chill:XML=<eff tip="2" t="4"><sk id="tormoz" ref="mult"/></eff>;
++            chill.@id="legendary_chill"+stack;chill.sk[0].@v1=1-stack*.1;AllData.d.appendChild(chill);
++            packText("e","legendary_chill"+stack,"Охлаждение: "+stack*10+"%","Скорость передвижения снижена на 4 секунды.");
++         }
++         if(legendaryFind(AllData.d.eff,"legendary_lunar")==null)AllData.d.appendChild(<eff id="legendary_lunar" tip="2" t="6"/>);
++         packText("e","legendary_lunar","Лунный долг","Следующее попадание «Лунного долга» в течение 6 секунд нанесёт на 35% больше урона и снимет метку.");
++         if(legendaryFind(AllData.d.weapon,"multi_lightning")==null){
++            var spell:XML=legendaryFind(AllData.d.weapon,"lightning").copy();spell.@id="multi_lightning";spell.@perslvl=1;spell.vis[0].@vweap="vislightning";
++            spell.char[0].@damage=50;spell.char[1].@damage=70;spell.ammo[0].@magic=400;spell.ammo[0].@mana=45;spell.ammo[1].@mana=75;
++            spell.com[0].@chance=0;spell.com[1].@chance=0;AllData.d.appendChild(spell);
++         }
++         packText("weapon","multi_lightning","Мультимолния","Уровень I: до 3 разных врагов, 50 базового урона каждому. Уровень II: до 5 врагов, 70 урона. Радиус поиска от точки прицеливания — 280; дальность — 800. Стены закрывают цели. Один расход маны за применение. Для проверки выдан уровень I.");
++      }
++      public static function projectileEffect(target:Object,id:String):Object {
++         for each(var effect:Object in target.effects)if(!effect.vse&&effect.id==id)return effect;
++         return null;
++      }
++      private static function projectileExpire(target:Object,id:String):void {
++         for each(var effect:Object in target.effects)if(!effect.vse&&effect.id==id)effect.unsetEff(false,false,false);
++         // Native addEffect merges by ID even with expired entries; remove those before replacing.
++         for(var i:int=target.effects.length-1;i>=0;i--)if(target.effects[i].vse&&target.effects[i].id==id)target.effects.splice(i,1);
++      }
++      public static function projectileDamage(target:Object,damage:Number,bullet:Object):Number {
++         if(damage<=0||bullet==null||bullet.weap==null||target.invulner||target.sost>=3)return damage;
++         if(target.vulner!=null&&bullet.tipDamage>=0&&bullet.tipDamage<20&&target.vulner[bullet.tipDamage]<=0)return damage;
++         var id:String=bullet.weap.id;if(projectileIds.indexOf(id)<0)return damage;
++         var hits:Dictionary=projectileHits[bullet];if(hits==null){hits=new Dictionary(true);projectileHits[bullet]=hits;}
++         if(hits[target])return damage;hits[target]=true;
++         if(id=="lunar_debt"){
++            if(projectileEffect(target,"legendary_lunar")!=null){projectileExpire(target,"legendary_lunar");return damage*1.35;}
++            projectileExpire(target,"legendary_lunar");target.addEffect("legendary_lunar",0,6,false);
++         }
++         if(id=="northern_lights"&&!target.mech&&(target.vulner==null||target.vulner[11]>.1)){
++            var stacks:int=1;
++            for(var n:int=1;n<=3;n++)if(projectileEffect(target,"legendary_chill"+n)!=null)stacks=Math.min(3,n+1);
++            for(n=1;n<=3;n++)projectileExpire(target,"legendary_chill"+n);
++            target.addEffect("legendary_chill"+stacks,0,4,false);
++         }
++         if(id=="ash_star"&&(target.vulner==null||target.vulner[3]>.1)){
++            var burning:Object=projectileEffect(target,"burning");
++            if(burning!=null)burning.t=Math.max(burning.t,4*World.fps);
++            else {projectileExpire(target,"burning");target.addEffect("burning",8,4,false);}
++         }
++         if(id=="good_morning"&&!target.mech&&!target.doop)flashbangEffect(target,"contusion",2);
++         return damage;
++      }
++      public static function projectileAim(b:Object,x:Number,y:Number):void {
++         b.rot=Math.atan2(y-b.Y,x-b.X);b.dx=Math.cos(b.rot)*b.vel;b.dy=Math.sin(b.rot)*b.vel;b.knockx=Math.cos(b.rot);b.knocky=Math.sin(b.rot);
++      }
++      public static function projectileFired(weapon:Object):void {
++         if(weapon.b==null)return;
++         if(weapon.id=="multi_lightning"){multiLightning(weapon);return;}
++         if(weapon.id!="reverse_rainbow")return;
++         var count:int=0;var obj:Object=weapon.loc.lastObj;var aimX:Number=weapon.owner.celX;var aimY:Number=weapon.owner.celY;
++         var angle:Number=Math.atan2(aimY-weapon.bulY,aimX-weapon.bulX);
++         while(obj!=null&&count<weapon.kol){
++            if(obj is Bullet&&obj.weap==weapon&&projectileState[obj]==null){
++               var offset:Number=(count-(weapon.kol-1)*.5)*4;
++               obj.X=obj.begx=weapon.bulX-Math.sin(angle)*offset;obj.Y=obj.begy=weapon.bulY+Math.cos(angle)*offset;
++               projectileAim(obj,aimX,aimY);projectileState[obj]={age:0};count++;
++            }
++            obj=obj.pobj;
++         }
++      }
++      public static function multiLightning(weapon:Object):void {
++         var main:Object=weapon.b;var owner:Object=weapon.owner;var candidates:Array=[];var seen:Dictionary=new Dictionary(true);
++         for each(var target:Object in owner.loc.units){
++            if(seen[target])continue;seen[target]=true;
++            if(target==owner||target.fraction==owner.fraction||target.fraction==0||target.sost>=3||target.invulner||!owner.isMeet(target))continue;
++            var x:Number=target.X;var y:Number=target.Y-target.scY*.5;var dx:Number=x-main.X;var dy:Number=y-main.Y;
++            var ax:Number=x-owner.celX;var ay:Number=y-owner.celY;
++            if(dx*dx+dy*dy>800*800||ax*ax+ay*ay>280*280||!owner.loc.isLine(main.X,main.Y,x,y))continue;
++            candidates.push({unit:target,dist:ax*ax+ay*ay});
++         }
++         candidates.sortOn("dist",Array.NUMERIC);
++         var limit:int=weapon.variant>0?5:3;
++         for(var i:int=0;i<Math.min(limit,candidates.length);i++){
++            target=candidates[i].unit;
++            var b:Object=i==0?main:new Bullet(owner,main.X,main.Y,weapon.vBullet);
++            if(i>0){
++               b.weap=weapon;
++               for each(var key:String in ["vel","damage","pier","armorMult","tipDamage","tipDecal","precision","antiprec","miss","critCh","critInvis","critDamMult","critM","destroy","otbros","flare","spring","probiv","liv","desintegr"])b[key]=main[key];
++            }
++            b.targetObj=target;projectileAim(b,target.X,target.Y-target.scY*.5);
++         }
++      }
++      public static function projectileStep(b:Object):void {
++         if(b==null||b.weap==null||projectileIds.indexOf(b.weap.id)<0)return;
++         var state:Object=projectileState[b];
++         if(state==null){state={age:0};projectileState[b]=state;}
++         state.age++;
++         if(b.vis!=null){
++            if((b.weap.id=="storm_jar"||b.weap.id=="surprise")&&b.vis.core!=null)b.vis.core.rotation=state.age*12;
++            if(b.weap.id=="hello_ceiling")b.vis.alpha=.92+.08*(state.age%2);
++         }
++      }
++      public static function projectileBurst(b:Object):void {
++         if(b==null||b.weap==null||b.weap.id!="surprise"||b.inWall)return;
++         var state:Object=projectileState[b];if(state==null){state={age:0};projectileState[b]=state;}
++         if(state.burst)return;state.burst=true;
++         for(var i:int=0;i<8;i++){
++            var shard:Bullet=new Bullet(b.owner,b.X,b.Y,AshShot);shard.weap=b.weap;
++            shard.damage=b.damageExpl*.12;shard.tipDamage=6;shard.tipDecal=15;shard.vel=18;shard.liv=10;shard.destroy=0;
++            shard.rot=i*Math.PI/4;shard.dx=Math.cos(shard.rot)*18;shard.dy=Math.sin(shard.rot)*18;shard.knockx=Math.cos(shard.rot);shard.knocky=Math.sin(shard.rot);
++         }
++      }
++
++      public static var flashbangDetonations:int=0;
++      public static var flashbangLastHits:int=0;
++      public static function flashbangData():void {
++         if(legendaryFind(AllData.d.weapon,"flashbang")==null){
++            var grenade:XML=legendaryFind(AllData.d.weapon,"grenade").copy();grenade.@id="flashbang";grenade.@lvl=2;
++            grenade.char[0].@damage=0;grenade.char[0].@damexpl=0;grenade.char[0].@destroy=0;grenade.char[0].@knock=0;grenade.char[0].@expl=260;grenade.char[0].@time=60;grenade.char[0].@crit=0;
++            AllData.d.appendChild(grenade);
++         }
++         if(legendaryFind(AllData.d.item,"flashbang")==null){var item:XML=legendaryFind(AllData.d.item,"grenade").copy();item.@id="flashbang";item.@price=90;item.@sell=18;item.@chance=0;AllData.d.appendChild(item);}
++         var info:String="Светошумовая граната. Задержка 2 секунды. Без прямого урона: ослепление на 5 секунд и контузия на 2. Стены защищают, роботы не ослепляются. Рядом со взрывом может пострадать и героиня. Тестовые параметры.";
++         packText("weapon","flashbang","Светошумовая граната",info);packText("item","flashbang","Светошумовая граната",info);
++      }
++      public static function flashbangEligible(target:Object):Boolean {
++         if(target==null||target.sost>=3||target.invulner||target.disabled||target.trigDis||target.mech||(target.doop&&!target.player))return false;
++         if(target.opt!=null&&target.opt.robot)return false;
++         if(target.vulner!=null&&Number(target.vulner[5])<=.1)return false;
++         return true;
++      }
++      public static function flashbangEffect(target:Object,id:String,seconds:int):void {
++         for each(var effect:Object in target.effects)if(!effect.vse&&effect.id==id&&(effect.forever||effect.t>=seconds*World.fps))return;
++         target.addEffect(id,0,seconds,false);
++      }
++      public static function flashbangExplosion(bullet:Object):Boolean {
++         projectileBurst(bullet);
++         if(bullet==null||bullet.weap==null||bullet.weap.id!="flashbang")return false;
++         flashbangDetonations++;flashbangLastHits=0;
++         var location:Object=bullet.loc;if(location==null)return true;
++         location.budilo(bullet.X,bullet.Y,700);Emitter.emit("impexpl",location,bullet.X,bullet.Y);Snd.ps("emp_e",bullet.X,bullet.Y);
++         if(bullet.inWall||World.w==null||World.w.loc!=location)return true;
++         var radius:Number=bullet.explRadius;
++         for each(var target:Object in location.units){
++            if(!flashbangEligible(target)||target.loc!=location)continue;
++            var x:Number=Number(target.X);var y:Number=Number(target.Y)-Number(target.scY)*.5;
++            var dx:Number=x-bullet.X;var dy:Number=y-bullet.Y;
++            if(dx*dx+dy*dy>radius*radius)continue;
++            if(!location.isLine(bullet.X,bullet.Y,x,y))continue;
++            flashbangEffect(target,"blindness",5);flashbangEffect(target,"contusion",2);flashbangLastHits++;
++         }
++         return true;
++      }
++      public static function weaponWheelEnabled():Boolean {return World.w==null||World.w.configObj==null||World.w.configObj.data.legendaryWheel!==false;}
++      public static function setWeaponWheel(value:Boolean):void {if(World.w==null)return;if(World.w.gg!=null&&World.w.gui!=null)World.w.gui.unshowSelector(0);if(World.w.configObj!=null){World.w.configObj.data.legendaryWheel=value;try{World.w.configObj.flush();}catch(error:Error){}}}
++      public static var arsenalIds:Array=["last_word","cricket","iron_argument","two_boots","janitor","quiet_hour","rail_rifle","bad_weather","northern_lights","reverse_rainbow","storm_jar","cold_welcome","ash_star","lunar_debt","hello_ceiling","postman","good_morning","sewing_machine","warm_embrace","surprise"];
++      public static function arsenalRegister():void {
++         var definitions:XML=<arsenal>
++          <weapon id="last_word" base="p127mm" title="Последнее слово" lvl="4" info="Тяжёлый пистолет, патрон 12,7 мм. Тестовые характеристики; баланс предварительный."><char rapid="13" damage="48" maxhp="1500"/><ammo holder="10"/></weapon>
++          <weapon id="cricket" base="smg9" title="Сверчок" lvl="2" info="Компактный пистолет-пулемёт, патрон 9 мм. Тестовые характеристики; баланс предварительный."><char rapid="3" damage="13" maxhp="1500"/><ammo holder="30"/></weapon>
++          <weapon id="iron_argument" base="revo" title="Железный аргумент" lvl="5" info="Мощный револьвер .44. Тестовые характеристики; баланс предварительный."><char rapid="19" damage="94" maxhp="1500"/><ammo holder="6"/></weapon>
++          <weapon id="two_boots" base="oldshot" title="Два сапога" lvl="3" info="Двустволка: восемь дробин, два выстрела до перезарядки. Тестовые характеристики; баланс предварительный."><char kol="8" rapid="18" damage="15" maxhp="1500"/><ammo holder="2"/></weapon>
++          <weapon id="janitor" base="lshot" title="Дворник" lvl="4" info="Помповый дробовик, шесть дробин. Тестовые характеристики; баланс предварительный."><char kol="6" rapid="20" damage="19" maxhp="1500"/><ammo holder="5"/></weapon>
++          <weapon id="quiet_hour" base="sniper" title="Тихий час" lvl="4" info="Малошумная снайперская винтовка. Тестовые характеристики; баланс предварительный."><char rapid="25" prec="28" damage="68" maxhp="1500"/><ammo holder="7"/><snd noise="180"/></weapon>
++          <weapon id="rail_rifle" base="anti" title="Рельс" lvl="5" info="Крупнокалиберная винтовка .50 с пробитием брони. Тестовые характеристики; баланс предварительный."><char rapid="36" pier="24" damage="120" maxhp="1500"/><ammo holder="4"/></weapon>
++          <weapon id="bad_weather" base="carbine" title="Непогода" lvl="4" info="Автоматический карабин. Тестовые характеристики; баланс предварительный."><char rapid="4" damage="25" maxhp="1500"/><ammo holder="32"/></weapon>
++          <weapon id="northern_lights" base="lasp" title="Северное сияние" lvl="4" info="Бирюзовый кристаллический луч. Попадание добавляет 10% замедления на 4 секунды, максимум 30%. Без полной заморозки. Механизмы не охлаждаются. Тестовые параметры."><char rapid="12" damage="38" maxhp="1500"/><ammo holder="90" rashod="5"/></weapon>
++          <weapon id="reverse_rainbow" base="prism" title="Радуга наоборот" lvl="4" info="Шесть цветных лучей сходятся к точке прицеливания. На дистанции схождения можно попасть всеми шестью. Тестовые параметры."><char kol="6" rapid="18" damage="14" maxhp="1500"/><ammo holder="120" rashod="12"/></weapon>
++          <weapon id="storm_jar" base="grom" title="Гроза в банке" lvl="5" info="Электрический шар. При столкновении — электрический взрыв радиусом 90 с базовым уроном 35. Вблизи опасен для стрелка. Тестовые параметры."><char rapid="22" damage="80" maxhp="1500" damexpl="35" expl="90" destroy="20"/><ammo holder="96" rashod="8"/><phis speed="35"/><dop probiv="0"/></weapon>
++          <weapon id="cold_welcome" base="cryo" title="Холодный приём" lvl="4" info="Криопушка с родным эффектом заморозки. Тестовые характеристики; баланс предварительный."><char kol="5" rapid="22" damage="24" maxhp="1500"/><ammo holder="16" rashod="1"/></weapon>
++          <weapon id="ash_star" base="plam" title="Пепельная звезда" lvl="5" info="Три огненных плазменных сгустка. Поджигают: 8 базового урона в секунду, 4 секунды. Повторное попадание обновляет время; урон горения не суммируется. Тестовые параметры."><char kol="3" rapid="26" damage="46" maxhp="1500"/><ammo holder="250" rashod="25"/></weapon>
++          <weapon id="lunar_debt" base="lassn" title="Лунный долг" lvl="5" info="Серебристо-фиолетовая бронебойная игла. Метка на 6 секунд: следующее попадание этой винтовки наносит на 35% больше урона и снимает метку. Тестовые параметры."><char rapid="28" prec="30" pier="20" damage="76" maxhp="1500"/><ammo holder="120" rashod="10"/></weapon>
++          <weapon id="hello_ceiling" base="mlau" title="Здравствуй, потолок" lvl="5" info="Крупная оливковая ракета с жёлтой разметкой, стабилизаторами и огненным следом, под модель ракетницы. Взрыв опасен для стрелка. Тестовые параметры."><char damexpl="310" expl="180" rapid="42" damage="75" maxhp="1500"/><ammo holder="1"/></weapon>
++          <weapon id="postman" base="glau" title="Почтальон" lvl="4" info="Барабанный гранатомёт на шесть зарядов. Тестовые характеристики; баланс предварительный."><char damexpl="155" rapid="24" damage="0" maxhp="1500"/><ammo holder="6"/></weapon>
++          <weapon id="good_morning" base="pulser" title="Доброе утро" lvl="5" info="Звуковая волна: сильное отбрасывание и контузия на 2 секунды. Урон физический, без прежнего ЭМИ-режима. Механизмы не получают контузию. Тестовые параметры."><char knock="65" rapid="32" damage="90" maxhp="1500" tipdam="2" destroy="0"/><ammo holder="240" rashod="20"/></weapon>
++          <weapon id="sewing_machine" base="minigun" title="Швейная машинка" lvl="5" info="Миниган с предварительной раскруткой стволов. Тестовые характеристики; баланс предварительный."><char rapid="1" prep="24" damage="12" maxhp="1500"/><ammo holder="600"/></weapon>
++          <weapon id="warm_embrace" base="cflamer" title="Тёплые объятия" lvl="5" info="Боевой огнемёт, использует топливо. Тестовые характеристики; баланс предварительный."><char rapid="1" damage="8" maxhp="1500"/><ammo holder="600" rashod="3"/></weapon>
++          <weapon id="surprise" base="bfg" title="Сюрприз" lvl="5" info="Тяжёлая плазменная сфера. Взрыв выпускает 8 короткоживущих плазменных осколков по 12% взрывного урона. Вблизи опасна для стрелка. Тестовые параметры."><char damexpl="145" expl="170" rapid="32" prep="25" damage="115" maxhp="1500"/><ammo holder="120" rashod="30"/></weapon>
++         </arsenal>;
++         for each(var definition:XML in definitions.weapon){
++            var id:String=String(definition.@id);var original:XML=legendaryFind(AllData.d.weapon,String(definition.@base));
++            if(original==null)throw new Error("Arsenal base missing: "+definition.@base);
++            if(legendaryFind(AllData.d.weapon,id)==null){
++               var weapon:XML=original.copy();weapon.@id=id;weapon.@lvl=definition.@lvl;delete weapon.@mess;
++               for each(var section:String in ["char","ammo","phis","dop","snd","vis","com"]){while(weapon[section].length()>1)delete weapon[section][1];}
++               for each(section in ["char","ammo","phis","dop","snd"]){
++                  if(definition[section].length()==0)continue;
++                  if(weapon[section].length()==0)weapon.appendChild(new XML("<"+section+"/>"));
++                  for each(var attribute:XML in definition[section][0].attributes())weapon[section][0]["@"+String(attribute.name())]=String(attribute);
++               }
++               if(weapon.com.length()==0)weapon.appendChild(<com/>);
++               weapon.com[0].@chance=0;weapon.com[0].@uniq=1;weapon.com[0].@price=6000;
++               AllData.d.appendChild(weapon);
++            }
++            packText("weapon",id,String(definition.@title),String(definition.@info));
++         }
++      }
++      public static var packWeaponIds:Array = ["death_of_insects","bread","valera","golden_sun","excalibur","vigilance","flashbang","police_baton","last_word","cricket","iron_argument","two_boots","janitor","quiet_hour","rail_rifle","bad_weather","northern_lights","reverse_rainbow","storm_jar","cold_welcome","ash_star","lunar_debt","hello_ceiling","postman","good_morning","sewing_machine","warm_embrace","surprise","multi_lightning"];
++      public static var packArmorIds:Array = ["cat_armor","maid_outfit","stable99","raider_scrap","aurora_armor"];
++      public static var packAssetLoaded:Object = {};
++      public static var packArmorBases:Object = {cat_armor:"astealth",maid_outfit:"pip",stable99:"pip",raider_scrap:"metal",aurora_armor:"encl"};
++
++      public static function packIsWeapon(id:String):Boolean {return packWeaponIds.indexOf(id)>=0;}
++      public static function packRegister():void {
++         projectileData();
++         flashbangData();
++         arsenalRegister();
++         var defs:XML=<pack>
++          <weapon id="bread" base="shotgun" title="Хлеб" asset="Bread" damage="18" lvl="4" info="Легендарное ружьё. 5% шанс за выстрел восстановить стрелку 50 HP. Проверка одна на весь выстрел, а не на дробину."/>
++          <weapon id="valera" base="revo" title="Валера" asset="Valera" damage="100" lvl="5" info="Мощный револьвер .44. Шесть патронов. Без случайных магических эффектов."/>
++          <weapon id="golden_sun" base="sword" title="Сияющее солнце" asset="Golden-Sun" damage="65" lvl="5" info="Ранее: Золотистое сияние. Когда меч выбран, его сияние даёт врагам дополнительные 10% шанса промаха по героине."/>
++          <weapon id="excalibur" base="sword" title="Эскалибур" asset="Excalibur" damage="85" lvl="5" info="Меч по образцу Fate. Пробивание брони: 60. Усиленные удары по бронированным врагам."/>
++          <weapon id="vigilance" base="p10mm" title="Бдительность" asset="Vigilance" damage="44" lvl="4" info="Тяжёлый огнестрельный пистолет. Патрон .50 MG. Характеристики тестовые."/>
++          <weapon id="police_baton" base="bat" title="Полицейская дубинка" asset="Police-Baton" damage="28" lvl="1" info="Полицейская дубинка с боковой рукоятью. Штатная механика ударов и оглушения."/>
++         </pack>;
++         for each(var d:XML in defs.weapon){
++            var id:String=String(d.@id);
++            if(legendaryFind(AllData.d.weapon,id)==null){
++               var w:XML=legendaryFind(AllData.d.weapon,String(d.@base)).copy();w.@id=id;w.@lvl=d.@lvl;
++               delete w.char;delete w.phis[1];delete w.vis[1];delete w.snd[1];delete w.ammo[1];delete w.dop[1];delete w.com[1];
++               w.appendChild(<char/>);w.char[0].@maxhp=1500;w.char[0].@damage=d.@damage;w.char[0].@rapid=(String(d.@base)=="sword"?12:10);
++               w.char[0].@prec=12;w.char[0].@tipdam=(String(d.@base)=="sword"?1:2);w.char[0].@knock=8;w.char[0].@destroy=10;
++               if(id=="bread"){w.char[0].@kol=6;w.char[0].@prec=6;w.ammo[0].@holder=6;}
++               if(id=="excalibur")w.char[0].@pier=60;
++               if(id=="police_baton")w.char[0].@tipdam=0;
++               if(id=="vigilance"){w.char[0].@tipdam=0;delete w.a;w.appendChild(<a>p50mg</a>);}
++               w.com[0].@chance=0;w.com[0].@price=6000;w.com[0].@uniq=1;
++               AllData.d.appendChild(w);
++            }
++            packText("weapon",id,String(d.@title),String(d.@info));
++         }
++         var armors:XML=<pack>
++          <armor id="cat_armor" base="astealth" title="Броня Кошки" armor="12" marmor="10" dexter="0.35" crit="0.1" info="Уклонение +35; скорость +20%; покупка -15%, продажа +15%; заметность -25%; шум -40%; критический шанс +10 п.п.; расход сил при беге -20%."/>
++          <armor id="maid_outfit" base="pip" title="Костюм горничной" armor="2" marmor="2" dexter="0.2" crit="0" info="Уклонение +20. Покупка дешевле на 15%. Все навыки получают +1 полный ранг при ношении, в том числе 10 → 11. После снятия бонус исчезает."/>
++          <armor id="stable99" base="pip" title="Комбинезон Стойла 99" armor="0" marmor="0" dexter="0.2" crit="0" info="Чёрный комбинезон с золотой отделкой и цифрами 99. Штатные свойства комбинезона."/>
++          <armor id="raider_scrap" base="metal" title="Рейдерская броня" armor="14" marmor="6" dexter="-0.1" crit="0" info="Броня из дорожных знаков, крышек, жести, покрышек и ремней. Тестовые защитные характеристики."/>
++          <armor id="aurora_armor" base="encl" title="Броня Авроры" armor="32" marmor="28" dexter="0" crit="0" info="Тёмная броня с зелёной сеткой. По одному декоративному сложенному крылу на каждом боку. Полёта не даёт. Характеристики тестовые."/>
++         </pack>;
++         for each(d in armors.armor){
++            id=String(d.@id);
++            if(legendaryFind(AllData.d.armor,id)==null){
++               var a:XML=legendaryFind(AllData.d.armor,String(d.@base)).copy();a.@id=id;a.@sort=200+packArmorIds.indexOf(id);a.@lvl=0;a.@comp="metal_comp";a.@price=7000;
++               delete a.@fly;delete a.@abil;delete a.upd;
++               a.@crit=d.@crit;a.appendChild(<upd/>);a.upd[0].@armor=d.@armor;a.upd[0].@marmor=d.@marmor;a.upd[0].@qual=0.8;a.upd[0].@dexter=d.@dexter;
++               if(id=="cat_armor")a.upd[0].@sneak=0.25;
++               AllData.d.appendChild(a);
++            }
++            packText("armor",id,String(d.@title),String(d.@info));
++         }
++      }
++      public static function packText(type:String,id:String,title:String,description:String):void {
++         for each(var lang:XML in [Res.d,Res.e]){if(lang==null)continue;var n:XML=legendaryFind(lang[type],id);if(n==null){n=new XML("<"+type+"/>");n.@id=id;lang.appendChild(n);n=legendaryFind(lang[type],id);}n.n=title;n.info=description;}
++      }
++      public static function packVigilanceAmmo(inv:Object):void {
++         var weapon:Object=inv.weapons["vigilance"];if(weapon==null||inv.items["p50mg"]==null)return;
++         weapon.ammoBase="p50mg";
++         var old:String=String(weapon.ammo);var compatible:Boolean=old=="p50mg";
++         if(!compatible&&inv.items[old]!=null)compatible=String(inv.items[old].xml.@base)=="p50mg";
++         if(compatible)return;
++         if(inv.items[old]!=null&&weapon.hold>0)inv.items[old].kol+=weapon.hold;
++         weapon.hold=0;weapon.setAmmo("p50mg",inv.items["p50mg"].xml);
++      }
++      public static function packInventory(inv:Object):void {
++         if(inv==null||inv.owner==null||!inv.owner.player)return;
++         for each(var id:String in packWeaponIds){if(inv.weapons[id]==null){inv.addWeapon(id);if(id=="flashbang"&&inv.items[id]!=null)inv.items[id].kol+=6;var node:XML=legendaryFind(AllData.d.weapon,id);if(node!=null&&node.a.length()){var ammo:String=String(node.a[0]);if(inv.items[ammo]!=null)inv.items[ammo].kol+=120;}}}
++         for each(id in packArmorIds)if(inv.armors[id]==null)inv.addArmor(id);
++         packVigilanceAmmo(inv);
++         if(World.w!=null&&World.w.pip!=null){if(World.w.pip.arrWeapon==null)World.w.pip.arrWeapon=[];if(World.w.pip.arrArmor==null)World.w.pip.arrArmor=[];for each(id in packWeaponIds)World.w.pip.arrWeapon[id]=inv.weapons[id];for each(id in packArmorIds)World.w.pip.arrArmor[id]=inv.armors[id];}
++      }
++      public function rankEquipmentBonus():int {return this.gg!=null&&this.gg.currentArmor!=null&&this.gg.currentArmor.id=="maid_outfit"?1:0;}
++      public function bonusPoints(id:String,raw:int):int {
++         if(rankEquipmentBonus()==0||skillIsPost(id))return raw;
++         var t:Array=[0,2,5,9,14,20,21,22,23,24,25,26];var base:int=0;for(var i:int=1;i<t.length;i++)if(raw>=t[i])base=i;
++         return raw+(base>=10?1:int(t[base+1])-int(t[base]));
++      }
++      public function packArmorParameters():void {
++         if(this.gg==null||this.gg.currentArmor==null)return;var id:String=this.gg.currentArmor.id;
++         if(id=="cat_armor"){this.allSpeedMult*=1.2;this.gg.noiseRun*=0.6;this.stamRun*=0.8;this.barterMult*=0.85;}
++         if(id=="maid_outfit")this.barterMult*=0.85;
++      }
++      public static function packFired(weapon:Object):void {
++         projectileFired(weapon);
++         if(weapon.id=="bread"&&weapon.owner!=null&&weapon.owner.player&&packBreadHeal(Math.random())>0){weapon.owner.heal(50,0,false);if(World.w!=null)World.w.gui.infoText("skill", "Хлеб: +50 HP");}
++      }
++      public static function packBreadHeal(roll:Number):int{return roll>=0&&roll<0.05?50:0;}
++      public static function packAllowHit(target:Object,bullet:Object):Boolean {
++         if(target==null||!target.player||target.currentWeapon==null||target.currentWeapon.id!="golden_sun"||bullet==null||bullet.owner==null||bullet.owner.player)return true;
++         return Math.random()>=0.1;
++      }
++      public static function packTrade(rows:Object,page:int):void {
++         if(page!=2||World.w==null||World.w.gg==null||World.w.gg.currentArmor==null||World.w.gg.currentArmor.id!="cat_armor")return;
++         for each(var row:Object in rows)if(row!=null&&row.price!=null)row.price*=1.15;
++      }
++      public static function packVisual(id:String):Class {
++         if(id=="flashbang")return FlashbangVisual;
++         if(id=="last_word")return Arsenal1Visual;if(id=="cricket")return Arsenal2Visual;if(id=="iron_argument")return Arsenal3Visual;if(id=="two_boots")return Arsenal4Visual;if(id=="janitor")return Arsenal5Visual;if(id=="quiet_hour")return Arsenal6Visual;if(id=="rail_rifle")return Arsenal7Visual;if(id=="bad_weather")return Arsenal8Visual;if(id=="northern_lights")return Arsenal9Visual;if(id=="reverse_rainbow")return Arsenal10Visual;if(id=="storm_jar")return Arsenal11Visual;if(id=="cold_welcome")return Arsenal12Visual;if(id=="ash_star")return Arsenal13Visual;if(id=="lunar_debt")return Arsenal14Visual;if(id=="hello_ceiling")return Arsenal15Visual;if(id=="postman")return Arsenal16Visual;if(id=="good_morning")return Arsenal17Visual;if(id=="sewing_machine")return Arsenal18Visual;if(id=="warm_embrace")return Arsenal19Visual;if(id=="surprise")return Arsenal20Visual;
++         if(id=="bread")return BreadVisual;if(id=="valera")return ValeraVisual;if(id=="golden_sun")return GoldenVisual;if(id=="excalibur")return ExcaliburVisual;if(id=="vigilance")return VigilanceVisual;if(id=="police_baton")return BatonVisual;return null;
++      }
++      public static function packArmorId():String {
++         if(World.w==null)return "";
++         if(World.w.pip!=null&&(World.w.pip.active||World.w.mmArmor&&World.w.allStat==0))return World.w.pip.ArmorId;
++         if(World.w.armorWork!="")return World.w.armorWork;
++         return Appear.ggArmorId;
++      }
++      public static function packStyle(m:Object):Boolean {
++         if(m==null)return false;
++         var id:String=packArmorId();
++         if(packArmorBases[id]==null){packClean(m);return false;}
++         if(m["packBusy"])return true;m["packBusy"]=true;
++         if(m.obj!=null&&m["packColor"]){m.obj.transform.colorTransform=new ColorTransform();m["packColor"]=false;}
++         if(m.currentFrame!=1)m.gotoAndStop(1);else m.stop();
++         if(!m["packDrawBound"]){m.addEventListener(Event.ENTER_FRAME,packRedraw);m["packDrawBound"]=true;}
++         m["packBusy"]=false;packDraw(m,id);return true;
++      }
++      public static function packClean(m:Object):void {
++         var ancestor:Object=m.parent;for(var wd:int=0;ancestor!=null&&wd<5;wd++,ancestor=ancestor.parent){if(ancestor is MovieClip&&("packNativeWings" in ancestor)&&ancestor["packNativeWings"]!=null){ancestor.rwing.visible=ancestor["packNativeWings"][0];if(("lwing" in ancestor)&&ancestor.lwing!=null)ancestor.lwing.visible=ancestor["packNativeWings"][1];ancestor["packNativeWings"]=null;break;}}
++         if(m["packDecor"]!=null&&m.contains(m["packDecor"]))m.removeChild(m["packDecor"]);
++         if(m["packDrawBound"]){m.removeEventListener(Event.ENTER_FRAME,packRedraw);m["packDrawBound"]=false;}
++         for(var ri:int=0;ri<m.numChildren;ri++){var rc:Object=m.getChildAt(ri);if(rc is MovieClip&&("packOriginalColor" in rc)&&rc["packOriginalColor"]!=null){rc.transform.colorTransform=rc["packOriginalColor"];rc["packOriginalColor"]=null;}if(rc.name=="mark")rc.visible=true;}m["packDrawId"]="";
++      }
++      public static function packRedraw(e:Event):void {
++         var m:Object=e.currentTarget;var id:String=packArmorId();
++         if(packArmorBases[id]==null){packClean(m);return;}packDraw(m,id);
++      }
++      public static function packDraw(m:Object,id:String):void {
++         var p:Object=m.parent;
++         for(var depth:int=0;p!=null&&depth<5;depth++,p=p.parent)if(p is MovieClip&&("rwing" in p)&&p.rwing!=null){if(p["packNativeWings"]==null)p["packNativeWings"]=[p.rwing.visible,("lwing" in p)&&p.lwing!=null?p.lwing.visible:false];p.rwing.visible=false;if(("lwing" in p)&&p.lwing!=null)p.lwing.visible=false;break;}
++         if(m["packDrawId"]!=id){for(var ci:int=0;ci<m.numChildren;ci++){var cc:Object=m.getChildAt(ci);if(cc is MovieClip&&("packOriginalColor" in cc)&&cc["packOriginalColor"]!=null){cc.transform.colorTransform=cc["packOriginalColor"];cc["packOriginalColor"]=null;}}}
++         var name:String=getQualifiedClassName(m);var body:Boolean=name.indexOf("korpus")>=0;var neck:Boolean=name.indexOf("neck_")>=0;var head:Boolean=name.indexOf("morda_")>=0;var leg:Boolean=name.indexOf("fleg")>=0||name.indexOf("sleg")>=0;
++         for(var ti:int=0;ti<m.numChildren;ti++){var tc:Object=m.getChildAt(ti);if(tc.name=="mark")tc.visible=id=="raider_scrap";if(tc is MovieClip&&(body||neck||leg)&&(id=="cat_armor"||id=="stable99"||id=="aurora_armor"||id=="maid_outfit"&&body)){if(tc["packOriginalColor"]==null)tc["packOriginalColor"]=tc.transform.colorTransform;tc.transform.colorTransform=new ColorTransform(.23,.26,.3,1,10,12,14);}}
++         if(m["packDrawId"]==id&&m["packDecor"]!=null&&m.contains(m["packDecor"])){m.setChildIndex(m["packDecor"],m.numChildren-1);return;}
++         if(m["packDecor"]!=null&&m.contains(m["packDecor"]))m.removeChild(m["packDecor"]);
++         var box:Rectangle=new Rectangle();var first:Boolean=true;
++         for(var i:int=0;i<m.numChildren;i++){var c:Object=m.getChildAt(i);if(!c.visible)continue;var b:Rectangle=c.getBounds(m);if(b.width==0||b.height==0||b.width>1000||b.height>1000)continue;box=first?b:box.union(b);first=false;}
++         if(first)return;
++
++         var d:Sprite=new Sprite();d.mouseEnabled=false;d.mouseChildren=false;var g:Graphics=d.graphics;
++         var x:Number=box.x;var y:Number=box.y;var w:Number=box.width;var h:Number=box.height;var s:Number=Math.min(w,h)*.025;
++         var dark:uint=0x272D36;var silver:uint=0xAAB3B6;var teal:uint=0x388F94;var olive:uint=0x787F66;var green:uint=0x8AE930;
++         if(body){
++            packPoly(g,[x+w*.04,y+h*.22,x+w*.35,y+h*.08,x+w*.79,y+h*.14,x+w*.97,y+h*.42,x+w*.87,y+h*.84,x+w*.43,y+h*.96,x+w*.08,y+h*.78],id=="raider_scrap"?0x574837:(id=="aurora_armor"?0x252E22:dark),0x12191D,s);
++            if(id=="cat_armor"){
++               packPoly(g,[x+w*.05,y+h*.23,x+w*.29,y+h*.19,x+w*.35,y+h*.41,x+w*.21,y+h*.52,x+w*.04,y+h*.44],0x3B454F,silver,s*.8);
++               packPoly(g,[x+w*.75,y+h*.2,x+w*.92,y+h*.34,x+w*.96,y+h*.62,x+w*.81,y+h*.71,x+w*.7,y+h*.49],0x3B454F,silver,s*.8);
++               g.lineStyle(s*.8,silver);g.moveTo(x+w*.33,y+h*.18);g.lineTo(x+w*.68,y+h*.21);g.moveTo(x+w*.21,y+h*.72);g.lineTo(x+w*.71,y+h*.78);
++               packEye(g,x+w*.54,y+h*.48,w*.11,h*.14,teal,s);packStrap(g,x+w*.33,y+h*.2,w*.07,h*.57,s);
++            }else if(id=="maid_outfit"){
++               packPoly(g,[x+w*.02,y+h*.16,x+w*.44,y+h*.15,x+w*.5,y+h*.9,x+w*.02,y+h*.84],0x1E2229,0x10171A,s);
++               packRuffle(g,x+w*.02,y+h*.79,w*.46,h*.14,s*.6);
++               packPoly(g,[x+w*.4,y+h*.3,x+w*.79,y+h*.25,x+w*.88,y+h*.74,x+w*.43,y+h*.89],0xF1F2EF,0xB7C2C0,s*.6);
++               packBow(g,x+w*.15,y+h*.17,w*.18,h*.17,0xF4F5F0,s*.6);
++            }else if(id=="stable99"){
++               g.lineStyle(s*1.4,0xDDC363);g.moveTo(x+w*.11,y+h*.24);g.lineTo(x+w*.12,y+h*.74);g.moveTo(x+w*.73,y+h*.18);g.lineTo(x+w*.8,y+h*.75);
++               var txt:TextField=new TextField();txt.defaultTextFormat=new TextFormat("Arial",Math.max(8,h*.4),0xE3C765,true);txt.text="99";txt.x=x+w*.37;txt.y=y+h*.25;txt.width=w*.5;txt.height=h*.6;txt.selectable=false;d.addChild(txt);
++            }else if(id=="raider_scrap"){
++               packPoly(g,[x+w*.56,y+h*.1,x+w*.9,y+h*.2,x+w*.92,y+h*.65,x+w*.53,y+h*.61],0xA45438,0x3A392E,s);
++               g.lineStyle(s,0x4D4D40);g.beginFill(0x9E9F8D);g.drawEllipse(x+w*.05,y+h*.28,w*.3,h*.48);g.endFill();packStrap(g,x+w*.36,y+h*.18,w*.11,h*.67,s);
++               for(i=0;i<3;i++)packPoly(g,[x+w*(.6+.1*i),y+h*.2,x+w*(.64+.1*i),y-h*.1,x+w*(.69+.1*i),y+h*.23],0xB0B3A8,0x393D33,s*.6);
++            }else if(id=="aurora_armor"){
++               packHex(g,x+w*.12,y+h*.25,w*.7,h*.5,Math.min(w,h)*.08,green,s*.6);
++               packPoly(g,[x+w*.05,y+h*.21,x+w*.28,y+h*.14,x+w*.36,y+h*.35,x+w*.28,y+h*.56,x+w*.04,y+h*.48],olive,0x252F22,s);
++               for(i=0;i<5;i++)packPoly(g,[x+w*.78,y+h*.32,x+w*.12,y+h*(.33+.065*i),x+w*.23,y+h*(.44+.065*i),x+w*.77,y+h*.54],i%2==0?0x9AA184:0x7F896F,0x293424,s*.65);
++               g.lineStyle(s,green);g.drawEllipse(x+w*.7,y+h*.3,w*.12,h*.23);
++            }
++         }else if(neck){
++            if(id=="maid_outfit"){
++               packPoly(g,[x+w*.14,y+h*.41,x+w*.86,y+h*.48,x+w*.9,y+h*.69,x+w*.18,y+h*.62],0xF2F3F0,0xBAC4C1,s);packBow(g,x+w*.69,y+h*.67,w*.24,h*.16,0x262B32,s*.6);
++            }else{
++               packPoly(g,[x+w*.12,y+h*.3,x+w*.62,y+h*.39,x+w*.95,y+h*.75,x+w*.72,y+h*.95,x+w*.12,y+h*.7],dark,0x11191C,s);
++               if(id=="stable99"){g.lineStyle(s*1.4,0xDFC260);g.moveTo(x+w*.38,y+h*.44);g.lineTo(x+w*.7,y+h*.9);}
++               if(id=="cat_armor"){g.lineStyle(s*.7,silver);g.moveTo(x+w*.25,y+h*.49);g.lineTo(x+w*.72,y+h*.84);packEye(g,x+w*.58,y+h*.71,w*.12,h*.08,teal,s*.65);}
++               if(id=="aurora_armor")packHex(g,x+w*.2,y+h*.48,w*.36,h*.22,Math.min(w,h)*.08,green,s*.6);
++            }
++         }else if(leg){
++            if(name.indexOf("sleg1")>=0){
++               if(id=="cat_armor"){g.lineStyle(s*.7,silver);g.beginFill(0x343D47);g.drawRoundRect(x+w*.05,y+h*.06,w*.89,h*.64,w*.4,h*.3);g.endFill();packEye(g,x+w*.5,y+h*.33,w*.15,h*.06,teal,s*.6);} if(id=="stable99"){var number:TextField=new TextField();number.defaultTextFormat=new TextFormat("Arial",h*.3,0xDDC363,true);number.text="99";number.x=x+w*.17;number.y=y+h*.13;number.width=w*.85;number.height=h*.5;number.selectable=false;d.addChild(number);packNinetyNine(g,x+w*.13,y+h*.16,w*.7,h*.23,s);}
++               if(id=="maid_outfit"){g.lineStyle(s*.7,0x11191E);g.beginFill(0x242830);g.moveTo(x,y+h*.03);g.curveTo(x+w*.5,y-h*.12,x+w,y+h*.16);g.lineTo(x+w*1.1,y+h*.64);g.curveTo(x+w*.5,y+h*.8,x-w*.1,y+h*.6);g.endFill();packRuffle(g,x-w*.08,y+h*.57,w*1.15,h*.12,s*.5);packBow(g,x+w*.21,y+h*.15,w*.2,h*.1,0xEFF3EE,s*.6);}
++               if(id=="aurora_armor"){for(var feather:int=0;feather<4;feather++)packPoly(g,[x+w*.85,y+h*.12+feather*h*.07,x+w*.26,y+h*.17+feather*h*.08,x-w*.35,y+h*.43+feather*h*.07,x+w*.3,y+h*.37+feather*h*.07],0x69785B,0x18241A,s*.8);}
++            }
++            var lower:Boolean=name.indexOf("leg3")>=0;var middle:Boolean=name.indexOf("leg2")>=0;
++            if(id=="stable99"){
++               if(name.indexOf("fleg")>=0&&!lower){packPoly(g,[x+w*.03,y+h*.02,x+w*.97,y+h*.02,x+w*.92,y+h*.88,x+w*.08,y+h*.88],dark,0x151C21,s);g.lineStyle(s,0xDCC15E);g.moveTo(x+w*.08,y+h*.81);g.lineTo(x+w*.92,y+h*.81);}
++            }else if(id=="maid_outfit"){
++               if(lower){packPoly(g,[x+w*.06,y+h*.65,x+w*.94,y+h*.63,x+w*.98,y+h*.96,x+w*.03,y+h*.96],dark,0x151A20,s);packRuffle(g,x+w*.06,y+h*.26,w*.88,h*.17,s*.6);packStrap(g,x+w*.06,y+h*.47,w*.88,h*.09,s*.6);}
++            }else if(name.indexOf("sleg1")<0){
++               var top:Number=lower ? 0.17 : 0.08;var bottom:Number=lower ? 0.96 : 0.91;
++               packPoly(g,[x+w*.1,y+h*top,x+w*.91,y+h*(top+.03),x+w*.96,y+h*bottom,x+w*.02,y+h*bottom],id=="aurora_armor"?0x2F3C27:(id=="raider_scrap"?0x73654F:dark),0x151D20,s);
++               if(id=="cat_armor"){g.lineStyle(s*.8,silver);g.moveTo(x+w*.16,y+h*(top+.06));g.lineTo(x+w*.78,y+h*(top+.11));g.lineTo(x+w*.87,y+h*(bottom-.05));g.moveTo(x+w*.23,y+h*(bottom-.16));g.lineTo(x+w*.72,y+h*(bottom-.13));if(lower){g.lineStyle(s,teal);g.moveTo(x+w*.23,y+h*.72);g.lineTo(x+w*.8,y+h*.72);}}
++               if(id=="aurora_armor"){packHex(g,x+w*.2,y+h*.24,w*.56,h*.46,Math.min(w,h)*.19,green,s*.55);if(lower||middle)packPoly(g,[x+w*.06,y+h*.56,x+w*.87,y+h*.49,x+w*.95,y+h*.88,x+w*.13,y+h*.92],olive,0x253021,s);}
++               if(id=="raider_scrap"){g.lineStyle(s*.7,0xB1B5A7);g.moveTo(x+w*.15,y+h*.29);g.lineTo(x+w*.86,y+h*.36);g.moveTo(x+w*.15,y+h*.49);g.lineTo(x+w*.86,y+h*.56);packStrap(g,x+w*.06,y+h*.65,w*.89,h*.13,s*.7);}
++            }
++         }else if(head){
++            if(id=="cat_armor"){
++               packPoly(g,[33,-64,28,-91,15,-101,-4,-89,-48,-91,-75,-72,-68,-68,-35,-78,3,-70,16,-55],0x2B333D,silver,1.1);packPoly(g,[30,-73,26,-96,10,-78],0x252E36,silver,1.1);packPoly(g,[25,-77,23,-88,15,-78],teal,0x29494E,.7);packPoly(g,[30,-48,19,-52,13,-23,2,-4,12,1,27,-20],0x303B45,silver,1);
++            }else if(id=="maid_outfit"){
++               g.lineStyle(1.1,0xBEC8C3);g.beginFill(0xF4F5F1);g.moveTo(-77,-86);g.curveTo(-48,-109,-15,-75);g.lineTo(-19,-70);g.curveTo(-50,-96,-72,-79);g.endFill();packRuffle(g,-40,-99,51,13,1);
++            }else if(id=="raider_scrap"){
++               packPoly(g,[-73,-72,-20,-64,-18,-51,-74,-60],0x8D5C3F,0x403E33,1.1);g.lineStyle(1,0xC1BDA7);g.moveTo(-65,-66);g.lineTo(-26,-60);
++            }else if(id=="aurora_armor"){
++               packPoly(g,[25,-7,7,9,-30,20,-69,10,-72,22,-43,32,4,27,27,9],olive,0x273222,1.2);g.lineStyle(1,green);g.moveTo(16,9);g.lineTo(-1,21);g.lineTo(-35,26);g.lineTo(-62,18);
++            }
++         }
++         m.addChild(d);m["packDecor"]=d;m["packDrawId"]=id;
++      }
++      public static function packNinetyNine(g:Graphics,x:Number,y:Number,w:Number,h:Number,s:Number):void{g.lineStyle(Math.max(s,h*.1),0xE4CB72);for(var digit:int=0;digit<2;digit++){var dx:Number=x+w-w*.5*digit-w*.32;g.drawEllipse(dx,y,w*.32,h*.52);g.moveTo(dx,y+h*.24);g.lineTo(dx+w*.03,y+h*.78);g.curveTo(dx+w*.13,y+h*1.05,dx+w*.3,y+h*.87);}}
++      public static function packPoly(g:Graphics,pts:Array,fill:uint,line:uint,s:Number):void{g.lineStyle(s,line);g.beginFill(fill);g.moveTo(pts[0],pts[1]);for(var i:int=2;i<pts.length;i+=2)g.lineTo(pts[i],pts[i+1]);g.lineTo(pts[0],pts[1]);g.endFill();}
++      public static function packEye(g:Graphics,x:Number,y:Number,w:Number,h:Number,color:uint,s:Number):void{g.lineStyle(s,0xAAB7B5);g.beginFill(color);g.moveTo(x-w,y);g.curveTo(x,y-h,x+w,y);g.curveTo(x,y+h,x-w,y);g.endFill();g.lineStyle(s,0x15292D);g.moveTo(x,y-h*.7);g.lineTo(x,y+h*.7);}
++      public static function packStrap(g:Graphics,x:Number,y:Number,w:Number,h:Number,s:Number):void{g.lineStyle(s,0x191F22);g.beginFill(0x5B4D39);g.drawRect(x,y,w,h);g.endFill();g.lineStyle(s,0xA69F86);g.drawRect(x+w*.08,y+h*.38,w*.84,h*.24);}
++      public static function packRuffle(g:Graphics,x:Number,y:Number,w:Number,h:Number,s:Number):void{g.lineStyle(s,0xC2CDC6);for(var i:int=0;i<7;i++){g.beginFill(i%2==0?0xFAFBF3:0xDEE5E1);g.moveTo(x+w*i/7,y);g.lineTo(x+w*(i+.9)/7,y-h*.12);g.lineTo(x+w*(i+1.15)/7,y+h);g.lineTo(x+w*(i-.1)/7,y+h*.9);g.endFill();}}
++      public static function packBow(g:Graphics,x:Number,y:Number,w:Number,h:Number,color:uint,s:Number):void{packPoly(g,[x,y,x-w,y-h,x-w*.95,y+h],color,0x9BA8A1,s);packPoly(g,[x,y,x+w,y-h,x+w*.95,y+h],color,0x9BA8A1,s);g.beginFill(color);g.drawCircle(x,y,h*.3);g.endFill();}
++      public static function packHex(g:Graphics,x:Number,y:Number,w:Number,h:Number,r:Number,color:uint,s:Number):void{g.lineStyle(s,color,.9);for(var row:int=0;row<Math.ceil(h/(r*1.7));row++)for(var col:int=0;col<Math.ceil(w/(r*3));col++){var cx:Number=x+r+col*r*3+(row%2)*r*1.5;var cy:Number=y+r+row*r*1.7;if(cx+r>x+w||cy+r>y+h)continue;g.moveTo(cx+r,cy);for(var k:int=1;k<=6;k++)g.lineTo(cx+r*Math.cos(k*Math.PI/3),cy+r*Math.sin(k*Math.PI/3));}}
++
++      public static function legendaryResizeReady(world:Object) : Boolean
++      {
++         if(world == null || world.swfStage == null || world.pip == null || world.grafon == null || world.vblack == null) return false;
++         if(world.loadScreen < 0 && world.vwait == null) return false;
++         if(world.allStat > 0 && (world.cam == null || world.loc == null)) return false;
++         return true;
++      }
++
++      public static function legendaryFind(nodes:XMLList, key:String) : XML
++      {
++         for each(var entry:XML in nodes)
++            if(entry.attribute("id").toString() == key) return entry;
++         return null;
++      }
++
++      public function applySkillBonuses() : void
++      {
++         for(var skillKey:String in this.skills)
++         {
++            var skillRank:int = this.skillIsPost(skillKey) ? this.getPostSkLevel(this.skills[skillKey]) + this.rankEquipmentBonus() : this.getSkLevel(this.skills[skillKey]);
++            var skillNode:XML = legendaryFind(AllData.d.skill,skillKey);
++            if(skillNode != null) this.setSkillParam(skillNode,skillRank,this.bonusPoints(skillKey,this.skills[skillKey]));
++         }
++      }
++
++      public static function legendaryWeaponData() : void
++      {
++         var exists:Boolean = false;
++         for each(var node:XML in AllData.d.weapon) if(String(node.@id) == "death_of_insects") exists = true;
++         if(!exists)
++         {
++            AllData.d.appendChild(<weapon id="death_of_insects" tip="2" cat="2" skill="4" lvl="5" perk="plasma" lvlNoUse="1">
++               <char maxhp="1200" damage="65" rapid="10" prec="14" tipdam="6" knock="6" destroy="25"/>
++               <phis speed="180" deviation="1.5" recoil="3" massa="2.5"/>
++               <vis tipdec="15" vbul="plasma1" vweap="visplap"/>
++               <snd shoot="plap_s" reload="p10mm_r" noise="350"/>
++               <sats cons="20"/>
++               <ammo holder="48" rashod="3" reload="35"/>
++               <a>batt</a><com price="12000" worth="5" chance="0" uniq="1"/>
++               <n>Смерть насекомых</n>
++            </weapon>);
++         }
++         var text:XML = <weapon id="death_of_insects"><n>Смерть насекомых</n><info>Легендарный энергомагический пистолет. Двойной урон по насекомым. Плазменные выстрелы. Урон: 65. Магазин: 16 выстрелов, по 3 энергоячейки. Требуется ранг 5 навыка «Энергомагическое оружие»; на ранге 4 и ниже стрелять нельзя. Временно выдаётся автоматически для теста.</info></weapon>;
++         for each(var lang:XML in [Res.d,Res.e])
++         {
++            if(lang == null) continue;
++            var found:Boolean = false;
++            for each(var entry:XML in lang.weapon) if(String(entry.@id) == "death_of_insects") found = true;
++            if(!found) lang.appendChild(text.copy());
++         }
++      }
++
++      public static function legendaryInventory(inv:Object, saved:Object) : void
++      {
++         if(inv == null || inv.owner == null || !inv.owner.player) return;
++         if(inv.weapons["death_of_insects"] == null)
++         {
++            inv.addWeapon("death_of_insects");
++            if(inv.items["batt"] != null) inv.items["batt"].kol += 240;
++         }
++         packInventory(inv);
++         if(World.w != null) legendaryCache(inv,World.w.pip);
++      }
++
++      public static function legendaryCache(inv:Object, pip:Object) : void
++      {
++         if(inv == null || pip == null || inv.weapons == null) return;
++         var pistol:Object = inv.weapons["death_of_insects"];
++         if(pistol == null) return;
++         if(pip.arrWeapon == null) pip.arrWeapon = new Array();
++         pip.arrWeapon["death_of_insects"] = pistol;
++      }
++
++      public static function legendaryAllowed(weapon:Object) : Boolean
++      {
++         if(weapon.id != "death_of_insects" || weapon.owner == null || !weapon.owner.player) return true;
++         return weapon.owner.pers != null && weapon.owner.pers.getWeapLevel(4) >= 5;
++      }
++
++      public static function legendaryTargetDamage(target:Object, damage:Number, bullet:Object) : Number
++      {
++         if(bullet != null && bullet.weap != null && bullet.weap.id == "death_of_insects" && target.opt != null && target.opt.insect)
++            return damage * 2;
++         return projectileDamage(target,damage,bullet);
++      }
++
++      public static function legendaryWeaponStats(weapon:Object) : void
++      {
++         if(weapon.owner != null && weapon.owner.player && weapon.owner.pers != null)
++            weapon.damMult *= weapon.owner.pers.legendaryWeaponMultiplier(weapon.skill);
++      }
++
++      public static function legendaryDecorate(weapon:Object) : void
++      {
++         var projectile:Class=projectileClass(weapon.id);if(projectile!=null)weapon.vBullet=projectile;
++         var custom:Class=packVisual(weapon.id);
++         if(custom!=null){weapon.vWeapon=custom;weapon.vis=new custom();return;}
++         if(weapon.id != "death_of_insects") return;
++         weapon.nazv = "Смерть насекомых";
++         weapon.vWeapon = DeathOfInsectsVisual;
++         weapon.vis = new DeathOfInsectsVisual();
++      }
++
++      public static function legendaryCost(id:String, step:int) : int
++      {
++         if(id == "attack" || id == "defense" || id == "knowl" || step <= 20) return 1;
++         if(step <= 22) return 2;
++         if(step <= 24) return 3;
++         return 4;
++      }
++
++      public static function legendaryTotal(id:String, start:int, end:int) : int
++      {
++         var total:int = 0;
++         for(var step:int = start + 1; step <= end; step++) total += legendaryCost(id,step);
++         return total;
++      }
++
++      public static function legendaryData() : void
++      {
++         legendaryWeaponData();
++         packRegister();
++         for each(var skill:XML in AllData.d.skill)
++         {
++            if(int(skill.@post) > 0) continue;
++            for each(var sk:XML in skill.sk)
++            {
++               if(sk.@dop.length()) continue;
++               if(sk.@vd.length() && Number(sk.@vd) < 0)
++               {
++                  var base:Number = sk.@v0.length() ? Number(sk.@v0) : (sk.@ref == "add" ? 0 : 1);
++                  var delta:Number = Number(sk.@vd);
++                  for(var j:int = 1; j <= 5; j++) sk["@v" + j] = Math.max(0,base + j * delta);
++                  delete sk.@vd;
++               }
++               if(!sk.@v5.length()) continue;
++               var a:Number = Number(sk.@v4);
++               var b:Number = Number(sk.@v5);
++               for(var rank:int = 6; rank <= 11; rank++)
++               {
++                  var value:Number = b >= a ? b + (rank - 5) * (b - a) : (a > 0 ? b * Math.pow(b / a,rank - 5) : b);
++                  sk["@v" + rank] = Math.round(value * 1000000) / 1000000;
++               }
++            }
++            for each(var eff:XML in skill.eff)
++            {
++               if(eff.@n5.length() && eff.@n4.length())
++               {
++                  for(var r:int = 6; r <= 11; r++) eff["@n" + r] = "+" + (Number(eff.@n5) + (r - 5) * (Number(eff.@n5) - Number(eff.@n4)));
++               }
++            }
++         }
++      }
++
+       public function skillIsPost(param1:String) : Boolean
+       {
+          if(param1 == "attack" || param1 == "defense" || param1 == "knowl")
+@@ -1105,6 +1958,7 @@ package fe.unit
+       
+       public function getSkillLevel(param1:String) : int
+       {
++         if(this.skillIsPost(param1)) return this.getPostSkLevel(int(this.skills[param1])) + this.rankEquipmentBonus();
+          if(this.skills[param1] == undefined)
+          {
+             return 0;
+@@ -1193,9 +2047,20 @@ package fe.unit
+          var _loc6_:* = undefined;
+          var _loc7_:* = undefined;
+          var _loc8_:* = undefined;
+-         if(param3 && param2 > this.skillPoint)
++         var cost:int = 0;
++         var allowed:int = 0;
++         var cap:int = this.skillIsPost(param1) ? maxPostSkLvl : maxSkLvl;
++         param2 = Math.min(param2,cap - int(this.skills[param1]));
++         if(param3)
+          {
+-            param2 = this.skillPoint;
++            while(allowed < param2)
++            {
++               var nextCost:int = legendaryCost(param1,int(this.skills[param1]) + allowed + 1);
++               if(cost + nextCost > this.skillPoint) break;
++               cost += nextCost;
++               allowed++;
++            }
++            param2 = allowed;
+          }
+          if(param2 <= 0)
+          {
+@@ -1229,7 +2094,7 @@ package fe.unit
+          }
+          if(param3)
+          {
+-            this.skillPoint -= param2;
++            this.skillPoint -= cost;
+          }
+       }
+       
+@@ -1408,7 +2273,7 @@ package fe.unit
+          var dp:XML = param2;
+          if(dp == null)
+          {
+-            dp = AllData.d.perk.(@id == nid)[0];
++            dp = legendaryFind(AllData.d.perk,nid);
+          }
+          if(dp == null)
+          {
+@@ -2169,23 +3034,10 @@ package fe.unit
+          this.defaultParams();
+          this.gg.maxhp += (this.level - 1) * this.lvlHP;
+          this.inMaxHP += (this.level - 1) * this.lvlOrganHp;
+-         for(id in this.skills)
+-         {
+-            lvl = 0;
+-            if(this.skillIsPost(id))
+-            {
+-               lvl = this.getPostSkLevel(this.skills[id]);
+-            }
+-            else
+-            {
+-               lvl = this.getSkLevel(this.skills[id]);
+-            }
+-            xml = AllData.d.skill.(@id == id)[0];
+-            this.setSkillParam(xml,lvl,this.skills[id]);
+-         }
++         this.applySkillBonuses();
+          for(id in this.perks)
+          {
+-            xml = AllData.d.perk.(@id == id)[0];
++            xml = legendaryFind(AllData.d.perk,id);
+             this.setSkillParam(xml,this.perks[id]);
+          }
+          this.headHP = procHead * this.inMaxHP;
+@@ -2203,7 +3055,7 @@ package fe.unit
+             id = eff.id;
+             if(!eff.vse)
+             {
+-               xml = AllData.d.eff.(@id == id)[0];
++               xml = legendaryFind(AllData.d.eff,id);
+                this.setSkillParam(xml,eff.vse ? 0 : eff.lvl);
+             }
+          }
+@@ -2247,6 +3099,8 @@ package fe.unit
+                this.setFactor("allVulnerMult","alicorn","mult",this.alicornVulner,this.gg.allVulnerMult,"e");
+             }
+          }
++         this.legendaryParameters();
++         this.packArmorParameters();
+          this.gg.hp = this.gg.maxhp * procHP;
+          if(this.gg.rad > this.gg.maxhp - 1)
+          {
+@@ -2306,7 +3160,7 @@ package fe.unit
+                }
+                else
+                {
+-                  xml = AllData.d.eff.(@id == w);
++                  xml = legendaryFind(AllData.d.eff,w);
+                   if(xml.length())
+                   {
+                      this.setSkillParam(xml[0],1);
+@@ -2418,5 +3272,237 @@ package fe.unit
+          return Res.pipText("reput0");
+       }
+    }
+-}
++   internal dynamic class DeathOfInsectsVisual extends MovieClip
++   {
++      public var emit:MovieClip;
++      private var loader:Loader;
++      public function DeathOfInsectsVisual()
++      {
++         super();
++         this.graphics.beginFill(0,0); this.graphics.drawRect(-18,-14,55,28); this.graphics.endFill();
++         this.emit = new MovieClip(); this.emit.x = 37; this.emit.y = -10; this.addChild(this.emit);
++         this.loader = new Loader();
++         this.loader.contentLoaderInfo.addEventListener(Event.COMPLETE,this.loaded);
++         this.loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,this.failed);
++         this.loader.load(new URLRequest("app:/Assets/Death-of-Insects.png"));
++      }
++      private function loaded(e:Event) : void
++      {
++         Pers.packAssetLoaded[String(this.loader.contentLoaderInfo.url)]=true; var bitmap:Bitmap = this.loader.content as Bitmap;
++         if(bitmap != null) bitmap.smoothing = true;
++         this.loader.scaleX = 55 / this.loader.contentLoaderInfo.width;
++         this.loader.scaleY = this.loader.scaleX;
++         this.loader.x = -18; this.loader.y = -14;
++         this.addChildAt(this.loader,0);
++      }
++      private function failed(e:IOErrorEvent) : void
++      {
++         var fallback:MovieClip = new visplap();
++         this.addChildAt(fallback,0);
++      }
++   }
++   internal dynamic class BreadVisual extends MovieClip {
++      public var emit:MovieClip; public var lez:MovieClip; private var loader:Loader;
++      public function BreadVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,85,85*.3);graphics.endFill();emit=new MovieClip();emit.x=85-15;emit.y=-5;addChild(emit);lez=new MovieClip();addChild(lez);loader=new Loader();loader.contentLoaderInfo.addEventListener(Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,failed);loader.load(new URLRequest("app:/Assets/Bread.png"));}
++      private function loaded(e:Event):void{Pers.packAssetLoaded[String(this.loader.contentLoaderInfo.url)]=true;var b:Bitmap=loader.content as Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=85/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
++      private function failed(e:IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,85,8);graphics.endFill();}
++   }
++   internal dynamic class ValeraVisual extends MovieClip {
++      public var emit:MovieClip; public var lez:MovieClip; private var loader:Loader;
++      public function ValeraVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,46,46*.3);graphics.endFill();emit=new MovieClip();emit.x=46-15;emit.y=-5;addChild(emit);lez=new MovieClip();addChild(lez);loader=new Loader();loader.contentLoaderInfo.addEventListener(Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,failed);loader.load(new URLRequest("app:/Assets/Valera.png"));}
++      private function loaded(e:Event):void{Pers.packAssetLoaded[String(this.loader.contentLoaderInfo.url)]=true;var b:Bitmap=loader.content as Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=46/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
++      private function failed(e:IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,46,8);graphics.endFill();}
++   }
++   internal dynamic class GoldenVisual extends MovieClip {
++      public var emit:MovieClip; public var lez:MovieClip; private var loader:Loader;
++      public function GoldenVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,85,85*.3);graphics.endFill();emit=new MovieClip();emit.x=85-15;emit.y=-5;addChild(emit);lez=new MovieClip();addChild(lez);loader=new Loader();loader.contentLoaderInfo.addEventListener(Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,failed);loader.load(new URLRequest("app:/Assets/Golden-Sun.png"));}
++      private function loaded(e:Event):void{Pers.packAssetLoaded[String(this.loader.contentLoaderInfo.url)]=true;var b:Bitmap=loader.content as Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=85/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
++      private function failed(e:IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,85,8);graphics.endFill();}
++   }
++   internal dynamic class ExcaliburVisual extends MovieClip {
++      public var emit:MovieClip; public var lez:MovieClip; private var loader:Loader;
++      public function ExcaliburVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,85,85*.3);graphics.endFill();emit=new MovieClip();emit.x=85-15;emit.y=-5;addChild(emit);lez=new MovieClip();addChild(lez);loader=new Loader();loader.contentLoaderInfo.addEventListener(Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,failed);loader.load(new URLRequest("app:/Assets/Excalibur.png"));}
++      private function loaded(e:Event):void{Pers.packAssetLoaded[String(this.loader.contentLoaderInfo.url)]=true;var b:Bitmap=loader.content as Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=85/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
++      private function failed(e:IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,85,8);graphics.endFill();}
++   }
++   internal dynamic class VigilanceVisual extends MovieClip {
++      public var emit:MovieClip; public var lez:MovieClip; private var loader:Loader;
++      public function VigilanceVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,48,48*.3);graphics.endFill();emit=new MovieClip();emit.x=48-15;emit.y=-5;addChild(emit);lez=new MovieClip();addChild(lez);loader=new Loader();loader.contentLoaderInfo.addEventListener(Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,failed);loader.load(new URLRequest("app:/Assets/Vigilance.png"));}
++      private function loaded(e:Event):void{Pers.packAssetLoaded[String(this.loader.contentLoaderInfo.url)]=true;var b:Bitmap=loader.content as Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=48/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
++      private function failed(e:IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,48,8);graphics.endFill();}
++   }
++   internal dynamic class BatonVisual extends MovieClip {
++      public var emit:MovieClip; public var lez:MovieClip; private var loader:Loader;
++      public function BatonVisual(){super();graphics.beginFill(0,0);graphics.drawRect(-15,-8,65,65*.3);graphics.endFill();emit=new MovieClip();emit.x=65-15;emit.y=-5;addChild(emit);lez=new MovieClip();addChild(lez);loader=new Loader();loader.contentLoaderInfo.addEventListener(Event.COMPLETE,loaded);loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,failed);loader.load(new URLRequest("app:/Assets/Police-Baton.png"));}
++      private function loaded(e:Event):void{Pers.packAssetLoaded[String(this.loader.contentLoaderInfo.url)]=true;var b:Bitmap=loader.content as Bitmap;if(b!=null)b.smoothing=true;loader.scaleX=65/loader.contentLoaderInfo.width;loader.scaleY=loader.scaleX;loader.x=-15;loader.y=-8;addChildAt(loader,0);}
++      private function failed(e:IOErrorEvent):void{graphics.beginFill(0x555555);graphics.drawRect(-15,-8,65,8);graphics.endFill();}
++   }
++
++
++   internal dynamic class Arsenal1Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal1Visual(){super();emit=new MovieClip();emit.x=44;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-01.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=59/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-01");}
++   }
++
++   internal dynamic class Arsenal2Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal2Visual(){super();emit=new MovieClip();emit.x=47;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-02.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=62/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-02");}
++   }
++
++   internal dynamic class Arsenal3Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal3Visual(){super();emit=new MovieClip();emit.x=47;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-03.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=62/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-03");}
++   }
++
++   internal dynamic class Arsenal4Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal4Visual(){super();emit=new MovieClip();emit.x=75;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-04.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=90/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-04");}
++   }
++
++   internal dynamic class Arsenal5Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal5Visual(){super();emit=new MovieClip();emit.x=78;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-05.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=93/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-05");}
++   }
++
++   internal dynamic class Arsenal6Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal6Visual(){super();emit=new MovieClip();emit.x=95;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-06.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=110/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-06");}
++   }
++
++   internal dynamic class Arsenal7Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal7Visual(){super();emit=new MovieClip();emit.x=110;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-07.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=125/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-07");}
++   }
++
++   internal dynamic class Arsenal8Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal8Visual(){super();emit=new MovieClip();emit.x=65;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-08.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=80/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-08");}
++   }
++
++   internal dynamic class Arsenal9Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal9Visual(){super();emit=new MovieClip();emit.x=45;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-09.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=60/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-09");}
++   }
++
++   internal dynamic class Arsenal10Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal10Visual(){super();emit=new MovieClip();emit.x=77;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-10.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=92/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-10");}
++   }
++
++   internal dynamic class Arsenal11Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal11Visual(){super();emit=new MovieClip();emit.x=78;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-11.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=93/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-11");}
++   }
++
++   internal dynamic class Arsenal12Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal12Visual(){super();emit=new MovieClip();emit.x=79;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-12.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=94/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-12");}
++   }
++
++   internal dynamic class Arsenal13Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal13Visual(){super();emit=new MovieClip();emit.x=83;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-13.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=98/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-13");}
++   }
++
++   internal dynamic class Arsenal14Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal14Visual(){super();emit=new MovieClip();emit.x=105;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-14.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=120/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-14");}
++   }
++
++   internal dynamic class Arsenal15Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal15Visual(){super();emit=new MovieClip();emit.x=97;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-15.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=112/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-15");}
++   }
++
++   internal dynamic class Arsenal16Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal16Visual(){super();emit=new MovieClip();emit.x=83;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-16.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=98/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-16");}
++   }
++
++   internal dynamic class Arsenal17Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal17Visual(){super();emit=new MovieClip();emit.x=90;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-17.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=105/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-17");}
++   }
++
++   internal dynamic class Arsenal18Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal18Visual(){super();emit=new MovieClip();emit.x=100;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-18.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=115/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-18");}
++   }
++
++   internal dynamic class Arsenal19Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal19Visual(){super();emit=new MovieClip();emit.x=90;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-19.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=105/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-19");}
++   }
++
++   internal dynamic class Arsenal20Visual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;private var art:Loader;
++      public function Arsenal20Visual(){super();emit=new MovieClip();emit.x=85;emit.y=-6;addChild(emit);lez=new MovieClip();addChild(lez);art=new Loader();art.contentLoaderInfo.addEventListener(Event.COMPLETE,arsenalLoaded);art.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR,arsenalFailed);art.load(new URLRequest("app:/Assets/Arsenal-20.png"));}
++      private function arsenalLoaded(e:Event):void{var bitmap:Bitmap=art.content as Bitmap;if(bitmap!=null)bitmap.smoothing=true;art.scaleX=100/art.contentLoaderInfo.width;art.scaleY=art.scaleX;art.x=-15;art.y=-6-art.contentLoaderInfo.height*art.scaleY*.4;addChildAt(art,0);Pers.packAssetLoaded[String(art.contentLoaderInfo.url)]=true;}
++      private function arsenalFailed(e:IOErrorEvent):void{trace("ARSENAL_ASSET_FAIL Arsenal-20");}
++   }
++
++   internal dynamic class FlashbangVisual extends MovieClip {
++      public var emit:MovieClip;public var lez:MovieClip;
++      public function FlashbangVisual(){
++         super();var g:Graphics=graphics;g.lineStyle(1,0x10191B);g.beginFill(0x87938D);g.drawRoundRect(-8,-11,16,25,5,5);g.endFill();g.beginFill(0xEDF1D6);g.drawRect(-8,-2,16,6);g.endFill();
++         g.lineStyle(1,0x24302D);for(var i:int=0;i<4;i++){g.moveTo(-5+i*3,-8);g.lineTo(-5+i*3,-4);g.moveTo(-5+i*3,7);g.lineTo(-5+i*3,11);}
++         g.beginFill(0xD7BD59);g.drawRoundRect(-7,-15,13,5,2,2);g.endFill();g.lineStyle(1.5,0xA7B1AA);g.drawCircle(7,-14,3);g.lineStyle(2,0x303C38);g.moveTo(0,-15);g.lineTo(10,-10);g.lineTo(10,5);
++         emit=new MovieClip();lez=new MovieClip();addChild(emit);addChild(lez);
++      }
++   }
++
++   internal dynamic class AuroraShot extends MovieClip {public var laser:MovieClip;public function AuroraShot(){super();laser=new MovieClip();addChild(laser);var g:Graphics=laser.graphics;g.lineStyle(7,0x44ddbb,.18);g.moveTo(-100,0);g.lineTo(0,0);g.lineStyle(2,0x99ffee,.95);g.moveTo(-100,0);g.lineTo(0,0);g.beginFill(0xd0fff6);g.moveTo(5,0);g.lineTo(-5,-3);g.lineTo(-12,0);g.lineTo(-5,3);g.endFill();}}
++
++   internal dynamic class LunarShot extends MovieClip {public var laser:MovieClip;public function LunarShot(){super();laser=new MovieClip();addChild(laser);var g:Graphics=laser.graphics;g.lineStyle(5,0x8055cc,.3);g.moveTo(-100,0);g.lineTo(0,0);g.lineStyle(1.2,0xe6dcff);g.moveTo(-100,0);g.lineTo(0,0);graphics.beginFill(0xf2eaff);graphics.moveTo(8,0);graphics.lineTo(-12,-2);graphics.lineTo(-7,0);graphics.lineTo(-12,2);graphics.endFill();}}
++
++   internal dynamic class RainbowShot extends MovieClip {public var laser:MovieClip;public function RainbowShot(){super();laser=new MovieClip();addChild(laser);var colors:Array=[0xff5577,0xffaa44,0xffee66,0x66ff99,0x66bbff,0xc488ff];var c:uint=colors[Pers.rainbowColor++%6];laser.graphics.lineStyle(6,c,.2);laser.graphics.moveTo(-100,0);laser.graphics.lineTo(0,0);laser.graphics.lineStyle(1.5,c);laser.graphics.moveTo(-100,0);laser.graphics.lineTo(0,0);}}
++
++   internal dynamic class StormShot extends MovieClip {public var laser:MovieClip;public var core:MovieClip;public function StormShot(){super();core=new MovieClip();addChild(core);core.graphics.beginFill(0x66ccff,.12);core.graphics.drawCircle(0,0,13);core.graphics.endFill();core.graphics.lineStyle(2,0x66bbff,.8);core.graphics.drawCircle(0,0,8);core.graphics.lineStyle(1.5,0xe0ffff);core.graphics.moveTo(-12,-3);core.graphics.lineTo(-4,1);core.graphics.lineTo(-1,-5);core.graphics.lineTo(3,3);core.graphics.lineTo(12,-1);core.graphics.beginFill(0xffffff);core.graphics.drawCircle(0,0,3);core.graphics.endFill();}}
++
++   internal dynamic class SurpriseShot extends MovieClip {public var laser:MovieClip;public var core:MovieClip;public function SurpriseShot(){super();core=new MovieClip();addChild(core);core.graphics.beginFill(0x99ff55,.13);core.graphics.drawCircle(0,0,20);core.graphics.endFill();core.graphics.beginFill(0x44dd55,.65);core.graphics.drawCircle(0,0,13);core.graphics.endFill();core.graphics.lineStyle(2,0xdbff88);core.graphics.drawEllipse(-15,-7,30,14);core.graphics.drawEllipse(-7,-15,14,30);core.graphics.beginFill(0xeaffbb);core.graphics.drawCircle(0,0,6);core.graphics.endFill();}}
++
++   internal dynamic class SonicShot extends MovieClip {public var laser:MovieClip;public function SonicShot(){super();for(var i:int=0;i<4;i++){graphics.lineStyle(1.8,0xccf6ff,1-i*.2);graphics.moveTo(-i*8,-6-i*4);graphics.curveTo(7-i*8,0,-i*8,6+i*4);}graphics.lineStyle(4,0x88ddee,.08);graphics.drawEllipse(-32,-20,40,40);}}
++
++   internal dynamic class AshShot extends MovieClip {public var laser:MovieClip;public function AshShot(){super();graphics.lineStyle(4,0x443e48,.5);graphics.moveTo(-23,0);graphics.lineTo(-8,0);graphics.beginFill(0xff6633,.25);graphics.drawCircle(0,0,9);graphics.endFill();graphics.beginFill(0xffa13d);graphics.moveTo(7,0);graphics.lineTo(-4,-5);graphics.lineTo(-10,-2);graphics.lineTo(-17,-3);graphics.lineTo(-10,3);graphics.lineTo(-4,5);graphics.endFill();graphics.beginFill(0xfff0b8);graphics.drawEllipse(-4,-2,9,4);graphics.endFill();}}
++
++   internal dynamic class CeilingRocket extends MovieClip {public var laser:MovieClip;public function CeilingRocket(){super();graphics.beginFill(0xff6d24,.65);graphics.moveTo(-14,-3);graphics.lineTo(-32,0);graphics.lineTo(-14,3);graphics.endFill();graphics.beginFill(0xffee99);graphics.moveTo(-14,-1.5);graphics.lineTo(-25,0);graphics.lineTo(-14,1.5);graphics.endFill();graphics.lineStyle(1,0x222821);graphics.beginFill(0x566345);graphics.moveTo(-16,-3);graphics.lineTo(-20,-8);graphics.lineTo(-10,-5);graphics.lineTo(2,-7);graphics.curveTo(12,-5,18,0);graphics.curveTo(12,5,2,7);graphics.lineTo(-10,5);graphics.lineTo(-20,8);graphics.lineTo(-16,3);graphics.endFill();graphics.lineStyle();graphics.beginFill(0xd4b442);graphics.drawRect(0,-6,2,12);graphics.drawRect(5,-5,2,10);graphics.endFill();graphics.beginFill(0xb5bab1);graphics.moveTo(14,-2.5);graphics.lineTo(18,0);graphics.lineTo(14,2.5);graphics.endFill();}}
+ 
++}
+\ No newline at end of file
+diff --git a/fe/inter/GUI.as b/fe/inter/GUI.as
+index c45a736..664127c 100644
+--- a/fe/inter/GUI.as
++++ b/fe/inter/GUI.as
+@@ -3,6 +3,11 @@ package fe.inter
+    import fe.*;
+    import fe.graph.Emitter;
+    import fe.serv.Script;
++   import fe.unit.Pers;
++   import flash.display.Sprite;
++   import flash.display.Graphics;
++   import flash.events.KeyboardEvent;
++   import flash.text.TextFormat;
+    import fe.unit.Invent;
+    import fe.unit.Unit;
+    import fe.unit.UnitPlayer;
+@@ -319,6 +324,7 @@ package fe.inter
+          this.vis.visibility.y = param2 - 50;
+          this.vis.selector.x = param1 / 2;
+          this.vis.selector.y = param2 / 2;
++         if(wheelLayer!=null)wheelDraw();
+          this.vis.sats.scaleX = param1 / 100;
+          this.vis.sats.scaleY = param2 / 100;
+          this.vis.hpbarboss.x = param1 / 2;
+@@ -350,6 +356,7 @@ package fe.inter
+       
+       public function showSelector(param1:int = 0, param2:int = 0) : *
+       {
++         if(wheelLayer!=null&&vis.selector.visible&&selMode==0){if(param2==1){unshowSelector(0);}else{wheelScroll(param1);return;}}
+          var _loc4_:* = undefined;
+          var _loc5_:* = undefined;
+          var _loc6_:Weapon = null;
+@@ -590,6 +597,110 @@ package fe.inter
+          }
+       }
+       
++      internal var wheelMouseEnabled:Boolean=false;
++      internal var wheelMouseChildren:Boolean=false;
++      internal var wheelLayer:Sprite;
++      internal var wheelGroup:int = -1;
++      internal var wheelPage:int = 0;
++      internal var wheelGroups:Array;
++      internal var wheelTitle:TextField;
++      internal var wheelHint:TextField;
++      internal var wheelNames:Array = ["Пистолеты","Автоматы","Дробовики","Винтовки","Энергомагия","Тяжёлое","Взрывчатка","Ближний бой","Магия"];
++
++      public function legendaryWheelState():Object {
++         var counts:Array=[];if(wheelGroups!=null)for each(var group:Array in wheelGroups)counts.push(group.length);
++         return {open:wheelLayer!=null&&wheelLayer.visible&&vis.selector.visible,group:wheelGroup,page:wheelPage,counts:counts,selected:arr!=null&&arr.length>0?arr[wSelN].id:"",mode:selMode};
++      }
++      internal function wheelBucket(row:Object):int {
++         var weapon:Object=World.w.invent.weapons[row.id];if(weapon==null)return 8;
++         if(weapon.skill==5||weapon.cat==6)return 6;
++         if(weapon.skill==6||weapon.skill==7)return 8;
++         if(weapon.skill==4)return 4;
++         if(weapon.skill==1)return 7;
++         if(weapon.cat==8)return 5;
++         if(weapon.cat==2)return 0;
++         if(weapon.cat==3)return 1;
++         if(weapon.cat==4)return 2;
++         return 3;
++      }
++      internal function wheelOpen():void {
++         wheelClose();wheelMouseEnabled=vis.mouseEnabled;wheelMouseChildren=vis.mouseChildren;vis.mouseEnabled=vis.mouseChildren=true;wheelGroup=-1;wheelPage=0;wheelGroups=[];
++         for(var g:int=0;g<9;g++)wheelGroups.push([]);
++         for(var r:int=0;r<arr.length;r++)wheelGroups[wheelBucket(arr[r])].push(r);
++         wheelDraw();this.t_sel=0;this.showFav=false;
++         World.w.ctr.keyAttack=false;
++         World.w.swfStage.addEventListener(KeyboardEvent.KEY_DOWN,wheelKey,false,100);
++         World.w.swfStage.addEventListener(MouseEvent.MOUSE_WHEEL,wheelScrollEvent,true,100);
++      }
++      internal function wheelClose():void {
++         if(wheelLayer!=null){vis.mouseEnabled=wheelMouseEnabled;vis.mouseChildren=wheelMouseChildren;if(wheelLayer.parent!=null)wheelLayer.parent.removeChild(wheelLayer);wheelLayer=null;}
++         for(var i:int=0;i<vis.selector.numChildren;i++)vis.selector.getChildAt(i).visible=true;
++         if(World.w!=null&&World.w.swfStage!=null){World.w.swfStage.removeEventListener(KeyboardEvent.KEY_DOWN,wheelKey);World.w.swfStage.removeEventListener(MouseEvent.MOUSE_WHEEL,wheelScrollEvent,true);}
++      }
++      internal function wheelKey(e:KeyboardEvent):void {
++         if(wheelLayer==null||!vis.selector.visible)return;
++         if(e.keyCode==27){e.stopImmediatePropagation();e.preventDefault();if(wheelGroup>=0){wheelGroup=-1;wheelPage=0;wheelDraw();}else unshowSelector(0);}
++      }
++      internal function wheelScrollEvent(e:MouseEvent):void {
++         if(wheelLayer==null||!vis.selector.visible)return;e.stopImmediatePropagation();e.preventDefault();wheelScroll(e.delta>0?-1:1);
++      }
++      internal function wheelScroll(direction:int):void {
++         if(direction==0)return;
++         if(wheelGroup<0){var selectedGroup:int=arr!=null&&arr.length>0?wheelBucket(arr[wSelN]):0;for(var n:int=1;n<=9;n++){var candidate:int=(selectedGroup+direction*n+90)%9;if(wheelGroups[candidate].length>0){wheelGroup=candidate;wheelPage=0;break;}}}
++         else {var pages:int=Math.max(1,Math.ceil(wheelGroups[wheelGroup].length/8));wheelPage=(wheelPage+direction+pages)%pages;}
++         wheelDraw();
++      }
++      internal function wheelLabel(parent:Sprite,text:String,x:Number,y:Number,width:Number,height:Number,size:int,color:uint=0x00FF99):TextField {
++         var field:TextField=new TextField();var format:TextFormat=new TextFormat("Arial",size,color,true);format.align="center";field.defaultTextFormat=format;field.text=text;field.x=x;field.y=y;field.width=width;field.height=height;field.wordWrap=true;field.multiline=true;field.selectable=false;field.mouseEnabled=false;parent.addChild(field);return field;
++      }
++      internal function wheelButton(label:String,action:String,value:int,x:Number,y:Number,width:Number=70):void {
++         var button:Sprite=new Sprite();button.name=action+"_"+value;button.x=x;button.y=y;button.buttonMode=true;
++         button.graphics.lineStyle(1,0x00AA77);button.graphics.beginFill(0x002017,.95);button.graphics.drawRoundRect(0,0,width,26,7,7);button.graphics.endFill();
++         wheelLabel(button,label,0,2,width,24,13);button.addEventListener(MouseEvent.MOUSE_DOWN,function(e:MouseEvent):void{e.stopImmediatePropagation();e.preventDefault();wheelAction(action,value);});wheelLayer.addChild(button);
++      }
++      internal function wheelAction(action:String,value:int):void {
++         if(action=="group"){if(wheelGroups[value].length==0)return;wheelGroup=value;wheelPage=0;wheelDraw();}
++         else if(action=="item"){wSelN=value;World.w.ctr.keyAttack=false;unshowSelector(1);}
++         else if(action=="back"){wheelGroup=-1;wheelPage=0;wheelDraw();}
++         else if(action=="page")wheelScroll(value);
++         else unshowSelector(0);
++      }
++      internal function wheelSector(index:int,count:int,title:String,detail:String,action:String,value:int,enabled:Boolean,selected:Boolean):void {
++         var sector:Sprite=new Sprite();sector.name=action+"_"+value;sector.buttonMode=enabled;
++         var start:Number=-Math.PI/2-Math.PI/count+index*Math.PI*2/count+.018;
++         var end:Number=start+Math.PI*2/count-.036;var inner:Number=108;var outer:Number=234;var graphics:Graphics=sector.graphics;
++         graphics.lineStyle(selected?2:1,selected?0xBFFF68:0x00AA77,enabled?1:.35);graphics.beginFill(selected?0x17492C:0x002016,.96);
++         graphics.moveTo(Math.cos(start)*inner,Math.sin(start)*inner);
++         for(var part:int=0;part<=16;part++){var angle:Number=start+(end-start)*part/16;graphics.lineTo(Math.cos(angle)*outer,Math.sin(angle)*outer);}
++         for(part=16;part>=0;part--){angle=start+(end-start)*part/16;graphics.lineTo(Math.cos(angle)*inner,Math.sin(angle)*inner);}graphics.endFill();
++         var middle:Number=(start+end)/2;var cx:Number=Math.cos(middle)*172;var cy:Number=Math.sin(middle)*172;
++         wheelLabel(sector,title,cx-59,cy-25,118,46,count==9?14:13,enabled?0x00FF99:0x437766);
++         wheelLabel(sector,detail,cx-57,cy+19,114,30,11,0xA3D8B9);
++         if(enabled){sector.addEventListener(MouseEvent.MOUSE_OVER,function(e:MouseEvent):void{if(wheelTitle!=null){wheelTitle.text=title;wheelHint.text=detail;}sector.alpha=.8;});sector.addEventListener(MouseEvent.MOUSE_OUT,function(e:MouseEvent):void{sector.alpha=1;});sector.addEventListener(MouseEvent.MOUSE_DOWN,function(e:MouseEvent):void{e.stopImmediatePropagation();e.preventDefault();wheelAction(action,value);});}
++         else sector.addEventListener(MouseEvent.MOUSE_DOWN,function(e:MouseEvent):void{e.stopImmediatePropagation();});
++         wheelLayer.addChild(sector);
++      }
++      internal function wheelDraw():void {
++         if(wheelLayer!=null&&wheelLayer.parent!=null)wheelLayer.parent.removeChild(wheelLayer);
++         for(var child:int=0;child<vis.selector.numChildren;child++)vis.selector.getChildAt(child).visible=false;
++         wheelLayer=new Sprite();wheelLayer.name="legendary_weapon_wheel";var scale:Number=Math.min(1,(screenX-24)/520,(screenY-70)/570);scale=Math.max(.45,scale);wheelLayer.scaleX=wheelLayer.scaleY=scale;
++         // A full-screen hit area prevents selection clicks from reaching the attack binding.
++         wheelLayer.graphics.beginFill(0x000A07,.72);wheelLayer.graphics.drawRect(-screenX/(2*scale),-screenY/(2*scale),screenX/scale,screenY/scale);wheelLayer.graphics.endFill();
++         wheelLayer.addEventListener(MouseEvent.MOUSE_DOWN,function(e:MouseEvent):void{if(e.target==wheelLayer){e.stopImmediatePropagation();unshowSelector(0);}});
++         wheelLayer.addEventListener(MouseEvent.RIGHT_MOUSE_DOWN,function(e:MouseEvent):void{e.stopImmediatePropagation();if(wheelGroup>=0)wheelAction("back",0);else unshowSelector(0);});
++         wheelLayer.addEventListener(MouseEvent.MOUSE_UP,function(e:MouseEvent):void{e.stopImmediatePropagation();});
++         wheelLayer.graphics.lineStyle(2,0x00CC88);wheelLayer.graphics.beginFill(0x00170F,1);wheelLayer.graphics.drawCircle(0,0,104);wheelLayer.graphics.endFill();vis.selector.addChild(wheelLayer);
++         var total:int=wheelGroup<0?9:Math.min(8,wheelGroups[wheelGroup].length-wheelPage*8);
++         for(var i:int=0;i<total;i++){
++            if(wheelGroup<0){var selected:Boolean=arr!=null&&arr.length>0&&wheelBucket(arr[wSelN])==i;wheelSector(i,9,wheelNames[i],String(wheelGroups[i].length)+" шт.","group",i,wheelGroups[i].length>0,selected);}
++            else {var rowIndex:int=wheelGroups[wheelGroup][wheelPage*8+i];var row:Object=arr[rowIndex];var detail:String=row.ammo==null?"":String(row.ammo)+" боепр.";if(row.hp!=null)detail+="  "+row.hp;wheelSector(i,total,String(row.nazv),detail,"item",rowIndex,true,rowIndex==wSelN);}
++         }
++         wheelTitle=wheelLabel(wheelLayer,wheelGroup<0?"ОРУЖИЕ":wheelNames[wheelGroup],-95,-44,190,57,17);wheelHint=wheelLabel(wheelLayer,wheelGroup<0?"Выберите категорию":"Выберите оружие",-94,13,188,45,12,0xA3D8B9);
++         if(wheelGroup>=0){wheelButton("Назад","back",0,-36,-84,72);var pages:int=Math.ceil(wheelGroups[wheelGroup].length/8);if(pages>1){wheelButton("‹","page",-1,-83,61,34);wheelLabel(wheelLayer,String(wheelPage+1)+" / "+pages,-43,63,86,24,13);wheelButton("›","page",1,49,61,34);}}
++         wheelLabel(wheelLayer,"ЛКМ — выбор    ПКМ / Esc — назад    Колесо — страницы",-270,248,540,36,13,0xA3D8B9);
++         this.t_sel=0;
++      }
++
+       public function setFavs() : *
+       {
+          var mc:MovieClip = null;
+@@ -665,6 +776,8 @@ package fe.inter
+       
+       public function setSelector() : *
+       {
++         if(selMode==0&&Pers.weaponWheelEnabled()){wheelOpen();return;}
++         wheelClose();
+          var n:int;
+          var i:*;
+          var mc:MovieClip = null;
+@@ -733,6 +846,7 @@ package fe.inter
+       
+       public function unshowSelector(param1:int = 0) : *
+       {
++         wheelClose();
+          this.t_sel = 0;
+          this.vis.selector.visible = this.gg.visSel = false;
+          this.showFav = false;
+@@ -1708,6 +1822,7 @@ package fe.inter
+       
+       public function informText(param1:String, param2:Boolean = false) : *
+       {
++         if(wheelLayer!=null)unshowSelector(0);
+          if(param2)
+          {
+             this.vis.mouseChildren = this.vis.mouseEnabled = true;
+@@ -1753,20 +1868,21 @@ package fe.inter
+          var n:int = param2;
+          var down:Boolean = param3;
+          var wait:Boolean = param4;
++         if(id!=null&&wheelLayer!=null)unshowSelector(0);
+          if(id == null)
+          {
+             this.dial.visible = this.inform.visible = false;
+-            this.vis.mouseChildren = this.vis.mouseEnabled = false;
++            this.vis.mouseChildren = this.vis.mouseEnabled = wheelLayer != null;
+             return false;
+          }
+          if(id is String)
+          {
+-            xml = Res.d.txt.(@id == id);
+-            if(xml.length() == 0)
++            xml = Pers.legendaryFind(Res.d.txt,String(id));
++            if(xml == null)
+             {
+-               xml = Res.e.txt.(@id == id);
++               xml = Pers.legendaryFind(Res.e.txt,String(id));
+             }
+-            if(xml.length() == 0)
++            if(xml == null)
+             {
+                return false;
+             }
+@@ -2001,6 +2117,7 @@ package fe.inter
+          {
+             this.setEffects();
+          }
++         if(wheelLayer!=null&&vis.selector.visible){this.t_sel=0;vis.mouseEnabled=vis.mouseChildren=true;}
+          if(this.t_sel > 0)
+          {
+             --this.t_sel;
+diff --git a/fe/inter/PipPageOpt.as b/fe/inter/PipPageOpt.as
+index bdd0281..538ee0b 100644
+--- a/fe/inter/PipPageOpt.as
++++ b/fe/inter/PipPageOpt.as
+@@ -1,6 +1,7 @@
+ package fe.inter
+ {
+    import fe.*;
++   import fe.unit.Pers;
+    import fl.controls.CheckBox;
+    import fl.controls.ScrollBar;
+    import fl.events.ScrollEvent;
+@@ -16,6 +17,8 @@ package fe.inter
+    public class PipPageOpt extends PipPage
+    {
+       
++      internal var returnMenuArmed:Boolean = false;
++      internal var legendaryLogOpen:Boolean = false;
+       internal var setkeyAction:String;
+       
+       internal var setkeyCell:int = 1;
+@@ -51,6 +54,22 @@ package fe.inter
+          vis.addChild(_loc3_);
+       }
+       
++      public static function legendaryChanges():String {
++         return "<b>REMAINS LEGENDARY — "+Pers.legendaryVersion+"</b><br><br>"
++         +"<b>0.4.8 — Сложность Завода</b><br>Пять режимов: Простая, Средняя, Сложная, Экстрим, А ты выживешь? Выбор всех пяти режимов перед каждым входом на Завод с карты. Влияет на здоровье, урон, опыт и дополнительную элиту. Действует на конкретный заход; Средняя сохраняет прежний баланс. Остальные локации не затрагиваются.<br><br>"
++         +"<b>0.4.7 — Особые снаряды и магия</b><br>Новые снаряды восьми пушек: охлаждение, лунная метка, сходящиеся лучи, электрический шар, плазменные осколки, звуковая волна, горение и ракета под модель. Мультимолния: до 3 / 5 целей на уровнях I / II. На ранге навыка 5 показан следующий легендарный бонус.<br><br>"
++         +"<b>0.4.6 — Светошумовая граната</b><br>Всего 28 единиц оружия и 5 костюмов. 6 гранат для проверки в рюкзаке. Ослепление 5 секунд и контузия 2 секунды, без прямого урона. Стены закрывают вспышку, роботы не ослепляются; берегите собственные глаза. На этом типе ветка новых гранат закрыта по решению пользователя.<br><br>"
++         +"<b>0.4.5 — Исправление интерфейса</b><br>Исправлены клики по колесу и поиск текста диалогов. Номер сборки виден в главном меню и заголовке окна.<br><br>"
++         +"<b>0.4.4 — Круговое меню оружия</b><br>Категории и выбор мышью, страницы внутри больших категорий, ПКМ / Esc для возврата. Быстрые слоты сохранены. Время идёт как в оригинале. В настройках можно вернуть прежний список.<br><br>"
++         +"<b>0.4.3 — Журнал изменений</b><br>Меню → Настройки → Изменения Legendary. Обычная вкладка «Лог» показывает события игры.<br><br>"
++         +"<b>0.4.2 — Арсенал: ещё 20 пушек</b><br>«Бдительность» переведена на патрон .50 MG. Старые патроны из её магазина возвращаются в рюкзак.<br>8 огнестрельных, 6 энергомагических и 6 тяжёлых/взрывных образцов. Всего в тестовом комплекте 27 единиц оружия и 5 костюмов. Предметы выдаются в рюкзак при начале и загрузке игры, если отсутствуют.<br>"
++         +"Отдельные арты, штатные патроны, перезарядка и эффекты снарядов. Баланс предварительный. «Доброе утро» пока использует импульсный режим с усиленным отбрасыванием.<br><br>"
++         +"<b>0.4.1 — Внешний вид экипировки</b><br>Отдельные детали пяти костюмов. Открытое лицо у Кошки; юбка и фартук горничной; чёрное Стойло 99; рейдерский хлам; сложенные декоративные крылья Авроры без полёта. Вид — упрощённая адаптация артов под модель игры.<br><br>"
++         +"<b>Ранее</b><br>Легендарные ранги навыков 6–10; стоимость 2/2/3/3/4 очка. Горничная даёт +1 ранг, включая 10 → 11. Кнопка возврата в главное меню. Первые 7 оружий и 5 комплектов.<br><br>"
++         +"<b>Ещё не реализовано из генерального плана</b><br>Мультиоружейный телекинез, Bullet-time, новые уровни сложности локаций, база и сюжетные DLC. Новые калибры не добавлялись.<br><br>"
++         +"";
++      }
++
+       public static function saveObj(param1:Object, param2:*) : Object
+       {
+          var _loc3_:Object = {"id":param2};
+@@ -155,6 +174,10 @@ package fe.inter
+          {
+             statHead.nazv.text = statHead.numb.text = "";
+             arr.push({"id":"fullscreen"});
++            if(World.w.gg != null) arr.push({"id":"legendary_mainmenu"});
++            arr.push({"id":"legendary_weaponwheel","check":Pers.weaponWheelEnabled()});
++            arr.push({"id":"legendary_changes"});
++            if(World.w.gg!=null)arr.push({"id":"legendary_factory"});
+             arr.push({
+                "id":"zoom100",
+                "check":World.w.zoom100
+@@ -212,6 +235,9 @@ package fe.inter
+                "check":World.w.errorShowOpt
+             });
+             arr.push({"id":"autotake"});
++
++
++
+          }
+          if(page2 == 6)
+          {
+@@ -298,8 +324,7 @@ package fe.inter
+             }
+             this.info.visible = true;
+             this.info.styleSheet = World.w.gui.style;
+-            this.info.htmlText = World.w.log;
+-            this.info.scrollV = this.info.maxScrollV;
++            if(this.legendaryLogOpen){this.info.htmlText="<font size='16'>"+legendaryChanges()+"</font>";this.info.scrollV=1;this.legendaryLogOpen=false;}else{this.info.htmlText=World.w.log;this.info.scrollV=this.info.maxScrollV;}
+          }
+          if(page2 == 1 || page2 == 2)
+          {
+@@ -367,7 +392,7 @@ package fe.inter
+          param1.land.text = "";
+          if(page2 == 3 || page2 == 6)
+          {
+-            param1.nazv.text = Res.pipText(param2.id);
++            param1.nazv.text = param2.id == "legendary_factory" ? Pers.factorySettingLabel() : param2.id == "legendary_weaponwheel" ? "Круговое меню оружия" : param2.id == "legendary_changes" ? "Изменения Legendary" : param2.id == "legendary_mainmenu" ? "Вернуться в главное меню" : Res.pipText(param2.id);
+             param1.ggName.text = "";
+             if(param2.numb != null)
+             {
+@@ -631,6 +656,26 @@ package fe.inter
+          }
+          if(page2 == 3)
+          {
++            if(param1.currentTarget.id.text == "legendary_weaponwheel"){Pers.setWeaponWheel(!Pers.weaponWheelEnabled());this.setStatus();return;}
++            if(param1.currentTarget.id.text == "legendary_factory"){vis.info.htmlText=Pers.factoryDescription();return;}
++            if(param1.currentTarget.id.text == "legendary_changes"){this.legendaryLogOpen=true;page2=5;this.setStatus();return;}
++            if(param1.currentTarget.id.text == "legendary_mainmenu")
++            {
++               if(!this.returnMenuArmed)
++               {
++                  this.returnMenuArmed = true;
++                  param1.currentTarget.nazv.text = "Вернуться без сохранения? Ещё раз";
++                  vis.info.htmlText = "Нажмите ещё раз для возврата в главное меню. Несохранённый прогресс будет потерян. Чтобы сохранить игру, сначала откройте вкладку «Сохранить».";
++                  return;
++               }
++               this.returnMenuArmed = false;
++               if(World.w.onConsol) World.w.consolOnOff();
++               if(pip.active) pip.onoff();
++               World.w.onPause = false;
++               World.w.mm.mainMenuOn();
++               return;
++            }
++            this.returnMenuArmed = false;
+             if(param1.currentTarget.id.text == "fullscreen")
+             {
+                World.w.swfStage.displayState = StageDisplayState.FULL_SCREEN_INTERACTIVE;
+@@ -798,7 +843,7 @@ package fe.inter
+       {
+          if(page2 == 3 || page2 == 6)
+          {
+-            vis.info.htmlText = Res.txt("p",param1.currentTarget.id.text,1);
++            vis.info.htmlText = param1.currentTarget.id.text == "legendary_factory" ? Pers.factoryDescription() : param1.currentTarget.id.text == "legendary_weaponwheel" ? "Колесо мыши открывает круговое меню. Выберите категорию и оружие левой кнопкой; правая кнопка или Esc — назад. Время идёт как обычно. Отключите эту настройку для штатного списка. Быстрые слоты сохраняются." : param1.currentTarget.id.text == "legendary_changes" ? "Открыть журнал версий Legendary. Обычная вкладка «Лог» сохраняет журнал событий игры." : param1.currentTarget.id.text == "legendary_mainmenu" ? "Вернуться в главное меню. Сначала сохраните прохождение во вкладке «Сохранить». Для выхода нажмите кнопку дважды." : Res.txt("p",param1.currentTarget.id.text,1);
+          }
+          else if(page2 == 1 || page2 == 2)
+          {
+diff --git a/fe/inter/PipPageStat.as b/fe/inter/PipPageStat.as
+index adef011..8479ea5 100644
+--- a/fe/inter/PipPageStat.as
++++ b/fe/inter/PipPageStat.as
+@@ -13,7 +13,7 @@ package fe.inter
+       
+       internal var skills:Array = new Array();
+       
+-      internal var maxSkLvl:int = 20;
++      internal var maxSkLvl:int = 25;
+       
+       internal var skillPoint:int = 0;
+       
+@@ -512,7 +512,7 @@ package fe.inter
+          {
+             if(param2.post > 0)
+             {
+-               _loc3_ = this.pers.getPostSkLevel(param2.lvl);
++               _loc3_ = this.pers.getPostSkLevel(param2.lvl) + this.pers.rankEquipmentBonus();
+                _loc4_ = 100;
+                if(_loc3_ < this.pers.postSkTab.length)
+                {
+@@ -523,9 +523,15 @@ package fe.inter
+             }
+             else
+             {
+-               param1.numb.text = this.pers.getSkLevel(param2.lvl);
++                              param1.numb.text = this.pers.getSkLevel(param2.lvl);
++               if(param2.lvl > 20)
++               {
++                  param1.nazv.text = "★ " + param2.nazv;
++                  param1.nazv.textColor = 0xFFD166;
++               }
++               else param1.nazv.textColor = 0xFFFFFF;
+                _loc5_ = 1;
+-               while(_loc5_ <= this.maxSkLvl)
++               while(_loc5_ <= 20)
+                {
+                   if(_loc5_ <= param2.minlvl)
+                   {
+@@ -718,11 +724,11 @@ package fe.inter
+                   if(World.w.alicorn && Res.istxt("e",id + "_al"))
+                   {
+                      vis.info.htmlText = Res.rainbow(Res.txt("e",id + "_al"));
+-                     vis.info.htmlText += "<br><br>" + effStr("skill",id + "_al");
++                     vis.info.htmlText += "<br><br>" + Pers.legendaryInfo(id,this.pers.bonusPoints(id,this.skills[id].lvl)) + effStr("skill",id + "_al");
+                   }
+                   else
+                   {
+-                     vis.info.htmlText = effStr("skill",id);
++                                          vis.info.htmlText = (this.pers.skillIsPost(id) ? "" : Pers.legendaryInfo(id,this.pers.bonusPoints(id,this.skills[id].lvl))) + effStr("skill",id);
+                   }
+                }
+                else if(page2 == 6)
+@@ -745,10 +751,10 @@ package fe.inter
+       {
+          if(this.pers.skillIsPost(param1) && this.skills[param1].lvl < Pers.maxPostSkLvl || this.skills[param1].lvl < this.maxSkLvl)
+          {
+-            if(this.skillPoint > 0)
++            if(this.skillPoint >= Pers.legendaryCost(param1,this.skills[param1].lvl + 1))
+             {
+                ++this.skills[param1].lvl;
+-               --this.skillPoint;
++               this.skillPoint -= Pers.legendaryCost(param1,this.skills[param1].lvl);
+                vis.butOk.visible = true;
+             }
+             else
+@@ -762,8 +768,8 @@ package fe.inter
+       {
+          if(this.skills[param1].lvl > this.skills[param1].minlvl)
+          {
++            this.skillPoint += Pers.legendaryCost(param1,this.skills[param1].lvl);
+             --this.skills[param1].lvl;
+-            ++this.skillPoint;
+          }
+       }
+       
+@@ -990,7 +996,7 @@ package fe.inter
+             _loc2_ = 0;
+             for(_loc3_ in this.skills)
+             {
+-               _loc2_ += this.skills[_loc3_].lvl - this.skills[_loc3_].minlvl;
++               _loc2_ += Pers.legendaryTotal(_loc3_,this.skills[_loc3_].minlvl,this.skills[_loc3_].lvl);
+             }
+             if(_loc2_ <= this.pers.skillPoint)
+             {
