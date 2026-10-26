@@ -1,0 +1,122 @@
+[
+  {
+    "id": "01",
+    "name": "Последнее слово",
+    "file": "01-Последнее слово.png",
+    "description": "firearm: imposing long-barreled semiautomatic heavy pistol, brushed charcoal steel, ivory grip with a small broken-clock emblem, copper barrel shroud"
+  },
+  {
+    "id": "02",
+    "name": "Сверчок",
+    "file": "02-Сверчок.png",
+    "description": "firearm: tiny compact folding machine pistol, olive stamped metal, skeleton stock folded beside receiver, orange safety accent, charming rugged compact silhouette"
+  },
+  {
+    "id": "03",
+    "name": "Железный аргумент",
+    "file": "03-Железный аргумент.png",
+    "description": "firearm: powerful large-frame black revolver, broad unscoped barrel with ribbed shroud, six-shot cylinder, dark red wooden grip, brass accents"
+  },
+  {
+    "id": "04",
+    "name": "Два сапога",
+    "file": "04-Два сапога.png",
+    "description": "firearm: elegant short double-barreled break-action shotgun, two side-by-side barrels, worn walnut, blue-black steel, engraved horseshoe on breech"
+  },
+  {
+    "id": "05",
+    "name": "Дворник",
+    "file": "05-Дворник.png",
+    "description": "firearm: rugged pump shotgun with perforated barrel heat shield, red-painted foregrip, rugged gray metal receiver, compact stock"
+  },
+  {
+    "id": "06",
+    "name": "Тихий час",
+    "file": "06-Тихий час.png",
+    "description": "firearm: sleek suppressed marksman rifle, integral cylindrical suppressor, graphite chassis, muted midnight blue panels, small low-profile optic"
+  },
+  {
+    "id": "07",
+    "name": "Рельс",
+    "file": "07-Рельс.png",
+    "description": "firearm: long powerful bolt-action anti-materiel rifle, oversized square muzzle brake, exposed heavy barrel, scratched steel, orange industrial stock, folded bipod"
+  },
+  {
+    "id": "08",
+    "name": "Непогода",
+    "file": "08-Непогода.png",
+    "description": "firearm: compact bullpup assault rifle, slate-gray polymer, worn yellow hazard accents, curved magazine at rear, short barrel, iron sights"
+  },
+  {
+    "id": "09",
+    "name": "Северное сияние",
+    "file": "09-Северное сияние.png",
+    "description": "energy-magical weapon: elegant energy pistol, pearl white and graphite, three translucent turquoise crystal fins, enclosed bright cyan power core, muzzle pointing right"
+  },
+  {
+    "id": "10",
+    "name": "Радуга наоборот",
+    "file": "10-Радуга наоборот.png",
+    "description": "energy-magical weapon: compact prism beam rifle, black chassis, row of six colored crystalline capacitor windows, angular forked muzzle, disciplined colorful details"
+  },
+  {
+    "id": "11",
+    "name": "Гроза в банке",
+    "file": "11-Гроза в банке.png",
+    "description": "energy-magical weapon: electrical carbine, copper coil wound around forward barrel, sealed blue glowing cylindrical capacitor, dark enamel body, rubberized grip"
+  },
+  {
+    "id": "12",
+    "name": "Холодный приём",
+    "file": "12-Холодный приём.png",
+    "description": "energy-magical weapon: frost projector rifle, pale blue insulated tank integrated below receiver, frosted steel nozzle, icy crystalline chamber, cobalt chassis"
+  },
+  {
+    "id": "13",
+    "name": "Пепельная звезда",
+    "file": "13-Пепельная звезда.png",
+    "description": "energy-magical weapon: plasma scattergun, volcanic black ceramic shell, glowing amber spherical plasma chamber, three thick emitter prongs, red-brown grip"
+  },
+  {
+    "id": "14",
+    "name": "Лунный долг",
+    "file": "14-Лунный долг.png",
+    "description": "energy-magical weapon: elegant long crescent-shaped magical sniper rifle, silver and dark indigo, moonstone crystal chamber, slender barrel, small crescent ornament, restrained blue glow"
+  },
+  {
+    "id": "15",
+    "name": "Здравствуй, потолок",
+    "file": "15-Здравствуй потолок.png",
+    "description": "heavy explosive weapon: single-shot shoulder-fired rocket launcher, weathered olive launch tube, yellow checker warning band, bulky square rear blast guard, compact sights"
+  },
+  {
+    "id": "16",
+    "name": "Почтальон",
+    "file": "16-Почтальон.png",
+    "description": "heavy explosive weapon: six-shot revolving grenade launcher, huge round drum, black steel with worn cream panels, short wide barrel and solid stock, red delivery-stamp emblem"
+  },
+  {
+    "id": "17",
+    "name": "Доброе утро",
+    "file": "17-Доброе утро.png",
+    "description": "A whimsical oversized fictional sonic cannon for a cartoon pony wasteland RPG, huge flared loudspeaker-shaped muzzle, chunky mint and cream retro-futuristic casing, amber vacuum-tube power chamber, broad carry handle and padded shoulder rest, playful little sun emblem, no realistic mechanism."
+  },
+  {
+    "id": "18",
+    "name": "Швейная машинка",
+    "file": "18-Швейная машинка.png",
+    "description": "heavy weapon: belt-fed rotary minigun, six long black barrels, exposed rotating barrel cluster, heavy red-gray industrial receiver, hanging short ammo belt, no tripod"
+  },
+  {
+    "id": "19",
+    "name": "Тёплые объятия",
+    "file": "19-Тёплые объятия.png",
+    "description": "heavy weapon: stylized wasteland flamethrower, brass nozzle and protective cage, black-and-rust body, one compact fuel tank integrated into rear, thick hose, red hazard markings"
+  },
+  {
+    "id": "20",
+    "name": "Сюрприз",
+    "file": "20-Сюрприз.png",
+    "description": "A fictional heavy magical orb launcher for a cartoon pony wasteland RPG, squat violet and silver armored housing, large transparent spherical chamber holding a floating bright magenta magic orb, three rounded emitter petals around wide muzzle, chunky rear handle, tiny gift-box emblem, entirely fantastical design."
+  }
+]

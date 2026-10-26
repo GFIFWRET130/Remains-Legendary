@@ -1,0 +1,308 @@
+[
+  {
+    "file": "assets/Arsenal-01.png",
+    "title": "Последнее слово",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "79d59b006ad6c0f124783dd8f02cecfb49eea813de88141c791f7eb98229bab3",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-02.png",
+    "title": "Сверчок",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "00acc2a378d61207712feeb7da0785530865e957d4d6404a58a1fd0b24c37301",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-03.png",
+    "title": "Железный аргумент",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "39678e09313d11c5ff3e3867b2d23a230d110741554432bb4a07cc0e37c0813c",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-04.png",
+    "title": "Два сапога",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "e43f9c852da5ccc460dc121ac86f4efadd58dedbe297694e99a63da6706c0286",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-05.png",
+    "title": "Дворник",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "7a837f9e0d97e899d61a54d815f7b02bd71b2ebf909d48811e993f9a62df9212",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-06.png",
+    "title": "Тихий час",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "2ce3a339701d01545a152d7fe171f81dfe419a9024bc85e32cfd9d7985ae3ff9",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-07.png",
+    "title": "Рельс",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "3610524c63ae475c9a6262fd42efc97ba51a54e6ffd2070c7f8108161f496162",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-08.png",
+    "title": "Непогода",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "c6c551e93e197e5baddb90f9c6e70e208a4c80fc1800183416396421a7d40628",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-09.png",
+    "title": "Северное сияние",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "ba854e97d4bcb29979617a2ed9350cc79e79c357cf65ed0f9491754b8dd8372c",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-10.png",
+    "title": "Радуга наоборот",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "0bf63454169073b105cafe175f9de0a2b4a061afb99bb304fc1e018f4b191204",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-11.png",
+    "title": "Гроза в банке",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "6a6aa0e34b1ba833ca2da657fac0cd3fe5ba151f0b5043f8d8015ea859610c46",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-12.png",
+    "title": "Холодный приём",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "e551189966cfa534feb44febd886f92bb48db69201b495c02fae4f3caca891e2",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-13.png",
+    "title": "Пепельная звезда",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "94de1a540d967fc63fd10b7402b65510ca38215c094e5f973b3b4584f6a70bc0",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-14.png",
+    "title": "Лунный долг",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "75d4017daf5161b1446b3bab147b095fea2232cf7b3649a74b02f3ac6aebdabb",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-15.png",
+    "title": "Здравствуй, потолок",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "31aafd5070858f2479283db4f5af5778b20402e2dea3bd1c5a6318dffdcec3ea",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-16.png",
+    "title": "Почтальон",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "17f7747e98aedb92d16fe889bf58e434d432e92a209c6d63f52505538b956d5a",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-17.png",
+    "title": "Доброе утро",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "3e11c90d750f44061d006496608d9224a27584e9486a3f652c6bf2a3399d2d5e",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-18.png",
+    "title": "Швейная машинка",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "b7d40711dd085c7ac389f829372d66cd904d4b22e90df2bb6a7147c78342f689",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-19.png",
+    "title": "Тёплые объятия",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "c97930b1a3e11c2b0602e60c98c17c7a25cd081302583668d39091e92d798169",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Arsenal-20.png",
+    "title": "Сюрприз",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "471beb9ccd3cd2db1669bee6e1e61deb1c7160ff5ba25f14a56504f5ccd7558d",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Aurora-Armor.png",
+    "title": "Броня Авроры",
+    "kind": "armor-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "b690ef527c6e2d048590388ce3398c1511bfcbe6c4d7c31506ec105b3cc5a6f8",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Bread.png",
+    "title": "Хлеб",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "9db4604d07e8da21234de3ef3bdd878bc235c646a0f2dad53bb509b238ccc04d",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Cat-Armor.png",
+    "title": "Броня Кошки",
+    "kind": "armor-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "77009f2292c88e4f609a86c8c55d386cdfe8daa88b6a09129700be1dd147c383",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Death-of-Insects.png",
+    "title": "Смерть насекомых",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "93610792db876b55721a4065ba42987f28c6b8393ca5c6561a73d126c781fb0c",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Excalibur.png",
+    "title": "Эскалибур",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "11c766bbef3b2dabfd0cdc56d229d4b770036e6628b5d74401c6b0c23d34983b",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Golden-Sun.png",
+    "title": "Сияющее солнце",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "a2671ac8686e3126bbfa1a06ca924f17336fc9cde2cb9fb78e489870c5c4e42c",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Maid-Outfit.png",
+    "title": "Костюм горничной",
+    "kind": "armor-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "f6fcca5efa5c1fd4b07c48b141178c15156cf416745aa6528bf5be3366b06ced",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Police-Baton.png",
+    "title": "Полицейская дубинка",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "417881ae3088a6df2c6633f890497f7d85b9e36f53fcc949dd4c67a7b38a6db6",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Raider-Armor.png",
+    "title": "Рейдерская броня",
+    "kind": "armor-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "53b5f433e3c030fc68c67d902bc87c4552bf580cba48ec2aab1aa509da3b98a5",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Stable-99.png",
+    "title": "Комбинезон Стойла 99",
+    "kind": "armor-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "b260ec1c31cd6900ae3635080948108668ef768bde021cae4fc757b916e16e3b",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Valera.png",
+    "title": "Валера",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "3e5746a979b7e27baa174226831e8e0e69334bf7e9d777198418bb436534a297",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "assets/Vigilance.png",
+    "title": "Бдительность",
+    "kind": "weapon-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "used by local prototype",
+    "sha256": "3d284341adb10aa87810067ec3ad50aff89e9bbcd8fe6e2a8f8b9d7ef1d872c3",
+    "rights": "See RIGHTS.md; third-party designs and intellectual property are excluded from project grants."
+  },
+  {
+    "file": "variants/Aurora-earlier-wings-01.png",
+    "title": "Броня Авроры — ранний вариант крыльев",
+    "kind": "armor-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "superseded concept; not the final in-game design",
+    "sha256": "1c5c60988c957c41ce347df284d07b2384718682d4aaed27eb9a9ab36965b569",
+    "rights": "Reference-derived fan concept. See RIGHTS.md."
+  },
+  {
+    "file": "variants/Aurora-earlier-wings-02.png",
+    "title": "Броня Авроры — ранний вариант крыльев",
+    "kind": "armor-concept",
+    "origin": "AI-generated/AI-assisted during this project",
+    "status": "superseded concept; not the final in-game design",
+    "sha256": "ad26798862a31171e8880fc6c898b8dca311737fcf22ca034abc50d9e7961ac1",
+    "rights": "Reference-derived fan concept. See RIGHTS.md."
+  }
+]
